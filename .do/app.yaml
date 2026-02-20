@@ -1,0 +1,53 @@
+name: boedekasse
+region: ams   # Amsterdam – change to your nearest DO region
+
+# ─── Services ───────────────────────────────────────────────────────────────
+
+services:
+  - name: backend
+    source_dir: backend
+    dockerfile_path: backend/Dockerfile
+    http_port: 3000
+    instance_count: 1
+    instance_size_slug: apps-s-1vcpu-0.5gb
+    envs:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        value: ${db.DATABASE_URL}      # injected by DO from the managed DB
+      - key: ALLOWED_ORIGIN
+        value: ${APP_URL}
+    health_check:
+      http_path: /api/health
+
+  - name: nginx
+    source_dir: .
+    dockerfile_path: nginx/Dockerfile
+    http_port: 80
+    instance_count: 1
+    instance_size_slug: apps-s-1vcpu-0.5gb
+    routes:
+      - path: /
+
+# ─── Static site (alternative to nginx service) ─────────────────────────────
+# Uncomment if you prefer DO's built-in static hosting instead of the nginx service:
+# static_sites:
+#   - name: frontend
+#     source_dir: frontend
+#     index_document: index.html
+#     catchall_document: index.html
+#     routes:
+#       - path: /
+
+# ─── Managed PostgreSQL database ────────────────────────────────────────────
+
+databases:
+  - name: db
+    engine: PG
+    version: "16"
+    production: false   # set to true for a dedicated cluster
+
+# ─── Domains (add your custom domain here) ──────────────────────────────────
+# domains:
+#   - domain: boedekasse.yourdomain.com
+#     type: PRIMARY
