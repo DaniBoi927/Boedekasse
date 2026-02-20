@@ -1,0 +1,91 @@
+name: CI / Deploy to Digital Ocean
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  REGISTRY: registry.digitalocean.com
+  BACKEND_IMAGE: ${{ secrets.DO_REGISTRY_NAME }}/boedekasse-backend
+  NGINX_IMAGE: ${{ secrets.DO_REGISTRY_NAME }}/boedekasse-nginx
+
+jobs:
+  # ─── Test ─────────────────────────────────────────────────────────────────
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Run tests
+        working-directory: backend
+        run: npm test
+
+  # ─── Build & Push (only on main) ──────────────────────────────────────────
+  build-and-push:
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DO_API_TOKEN }}
+
+      - name: Log in to DO Container Registry
+        run: doctl registry login --expiry-seconds 1200
+
+      - name: Build backend image
+        run: |
+          docker build -t $BACKEND_IMAGE:${{ github.sha }} ./backend
+          docker tag  $BACKEND_IMAGE:${{ github.sha }} $BACKEND_IMAGE:latest
+
+      - name: Build nginx image
+        run: |
+          docker build -t $NGINX_IMAGE:${{ github.sha }} -f nginx/Dockerfile .
+          docker tag  $NGINX_IMAGE:${{ github.sha }} $NGINX_IMAGE:latest
+
+      - name: Push images
+        run: |
+          docker push $BACKEND_IMAGE:${{ github.sha }}
+          docker push $BACKEND_IMAGE:latest
+          docker push $NGINX_IMAGE:${{ github.sha }}
+          docker push $NGINX_IMAGE:latest
+
+  # ─── Deploy ───────────────────────────────────────────────────────────────
+  deploy:
+    needs: build-and-push
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DO_API_TOKEN }}
+
+      - name: Deploy App to Digital Ocean App Platform
+        run: |
+          doctl apps create --spec .do/app.yaml 2>/dev/null || \
+          doctl apps update "$(doctl apps list --no-header --format ID,Spec.Name | grep boedekasse | awk '{print $1}')" --spec .do/app.yaml

@@ -1,0 +1,103 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #f0f4f8;
+  color: #1a202c;
+  min-height: 100vh;
+}
+
+header {
+  background: #2b6cb0;
+  color: #fff;
+  padding: 1rem 2rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,.15);
+}
+
+header h1 { font-size: 1.8rem; }
+
+main {
+  max-width: 720px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.balance-card,
+.form-card,
+.list-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,.1);
+}
+
+.balance-card h2 { font-size: 1rem; color: #718096; margin-bottom: .5rem; }
+#balance { font-size: 2.5rem; font-weight: 700; color: #2b6cb0; }
+
+.form-card h2, .list-card h2 { margin-bottom: 1rem; font-size: 1.1rem; }
+
+form {
+  display: grid;
+  gap: .75rem;
+}
+
+label { font-size: .85rem; font-weight: 600; color: #4a5568; }
+
+input, select {
+  width: 100%;
+  padding: .6rem .8rem;
+  border: 1px solid #cbd5e0;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: #2b6cb0;
+  box-shadow: 0 0 0 3px rgba(43,108,176,.2);
+}
+
+button[type="submit"] {
+  background: #2b6cb0;
+  color: #fff;
+  border: none;
+  padding: .7rem 1.2rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background .2s;
+}
+button[type="submit"]:hover { background: #2c5282; }
+
+#txList { list-style: none; display: flex; flex-direction: column; gap: .6rem; }
+
+#txList li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: .75rem 1rem;
+  border-radius: 6px;
+  background: #f7fafc;
+  border-left: 4px solid transparent;
+}
+
+#txList li.income  { border-left-color: #38a169; }
+#txList li.expense { border-left-color: #e53e3e; }
+
+.tx-amount { font-weight: 700; }
+.tx-amount.income  { color: #38a169; }
+.tx-amount.expense { color: #e53e3e; }
+
+.tx-delete {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #a0aec0;
+  font-size: 1.1rem;
+  margin-left: .5rem;
+  transition: color .2s;
+}
+.tx-delete:hover { color: #e53e3e; }
