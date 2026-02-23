@@ -1,9 +1,10 @@
 import React from 'react'
 
+type Props = { children: React.ReactNode }
 type State = { error: Error | null }
 
-export default class ErrorBoundary extends React.Component<{}, State> {
-  constructor(props: {}) {
+export default class ErrorBoundary extends React.Component<Props, State> {
+  constructor(props: Props) {
     super(props)
     this.state = { error: null }
   }
