@@ -1,68 +1,12 @@
 <!doctype html>
-<html>
+<html lang="da">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Boedekasse</title>
-  <link rel="stylesheet" href="./styles.css">
+  <title>Padel Bødekasse 🎾</title>
 </head>
 <body>
-  <div class="app">
-    <header class="topbar">
-      <h1>Boedekasse</h1>
-      <p class="subtitle">Track fines — who owes what. Clean & simple.</p>
-    </header>
-
-    <main class="main">
-      <section class="left">
-        <div class="card">
-          <h2>Add fine</h2>
-          <form id="addForm" class="add-form">
-            <div class="row">
-              <input id="payer" aria-label="payer" placeholder="Payer (name)" required />
-              <input id="amount" aria-label="amount" placeholder="Amount" required />
-            </div>
-            <input id="reason" aria-label="reason" placeholder="Reason (optional)" />
-            <div class="form-actions">
-              <button class="primary" type="submit">Add fine</button>
-              <button type="button" id="clearBtn">Clear</button>
-            </div>
-          </form>
-        </div>
-
-        <div class="card totals-card">
-          <h2>Totals</h2>
-          <div class="muted">Totals shown after fines are added</div>
-        </div>
-      </section>
-
-      <section class="right">
-        <div class="card">
-          <div class="list-header">
-            <h2>Fines</h2>
-          </div>
-
-          <table id="finesTable" class="fines">
-            <thead>
-              <tr>
-                <th>Payer</th>
-                <th>Amount</th>
-                <th>Reason</th>
-                <th>Paid</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-
-          <div class="muted small">No fines yet — add one on the left.</div>
-        </div>
-      </section>
-    </main>
-
-    <footer class="footer">Built with ♥ — served from your droplet</footer>
-  </div>
-
-  <script src="./app.js"></script>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
 </body>
 </html>
