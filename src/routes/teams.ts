@@ -12,7 +12,7 @@ function generateInviteCode(): string {
 
 // Create team
 router.post('/', authMiddleware, async (req: any, res) => {
-  const { name } = req.body;
+  const { name, mobilepay_link } = req.body;
   const userId = req.userId;
 
   if (!name || name.trim().length < 2) {
@@ -28,10 +28,11 @@ router.post('/', authMiddleware, async (req: any, res) => {
       .input('name', name.trim())
       .input('invite_code', invite_code)
       .input('created_by', userId)
+      .input('mobilepay_link', mobilepay_link || null)
       .query(`
-        INSERT INTO teams (name, invite_code, created_by) 
+        INSERT INTO teams (name, invite_code, created_by, mobilepay_link) 
         OUTPUT INSERTED.* 
-        VALUES (@name, @invite_code, @created_by)
+        VALUES (@name, @invite_code, @created_by, @mobilepay_link)
       `);
 
     const team = teamResult.recordset[0];
@@ -257,6 +258,80 @@ router.delete('/:id/leave', authMiddleware, async (req: any, res) => {
     res.json({ message: 'Du har forladt teamet' });
   } catch (err) {
     console.error('Leave team error:', err);
+    res.status(500).json({ error: 'Server fejl' });
+  }
+});
+
+// Update team settings (only formand)
+router.put('/:id', authMiddleware, async (req: any, res) => {
+  const { id } = req.params;
+  const { mobilepay_link } = req.body;
+  const userId = req.userId;
+
+  try {
+    const pool = await getPool();
+
+    // Check if requester is formand
+    const formandCheck = await pool.request()
+      .input('team_id', id)
+      .input('user_id', userId)
+      .query('SELECT role FROM team_members WHERE team_id = @team_id AND user_id = @user_id');
+
+    if (formandCheck.recordset.length === 0 || formandCheck.recordset[0].role !== 'formand') {
+      return res.status(403).json({ error: 'Kun formanden kan ændre team indstillinger' });
+    }
+
+    // Update team
+    await pool.request()
+      .input('id', id)
+      .input('mobilepay_link', mobilepay_link || null)
+      .query('UPDATE teams SET mobilepay_link = @mobilepay_link WHERE id = @id');
+
+    res.json({ message: 'Team opdateret' });
+  } catch (err) {
+    console.error('Update team error:', err);
+    res.status(500).json({ error: 'Server fejl' });
+  }
+});
+
+// Delete team (only creator/formand)
+router.delete('/:id', authMiddleware, async (req: any, res) => {
+  const { id } = req.params;
+  const userId = req.userId;
+
+  try {
+    const pool = await getPool();
+
+    // Check if requester is formand
+    const formandCheck = await pool.request()
+      .input('team_id', id)
+      .input('user_id', userId)
+      .query('SELECT role FROM team_members WHERE team_id = @team_id AND user_id = @user_id');
+
+    if (formandCheck.recordset.length === 0 || formandCheck.recordset[0].role !== 'formand') {
+      return res.status(403).json({ error: 'Kun formanden kan slette teamet' });
+    }
+
+    // Delete all related data first
+    await pool.request()
+      .input('team_id', id)
+      .query('DELETE FROM fines WHERE team_id = @team_id');
+    
+    await pool.request()
+      .input('team_id', id)
+      .query('DELETE FROM fine_types WHERE team_id = @team_id');
+    
+    await pool.request()
+      .input('team_id', id)
+      .query('DELETE FROM team_members WHERE team_id = @team_id');
+    
+    await pool.request()
+      .input('id', id)
+      .query('DELETE FROM teams WHERE id = @id');
+
+    res.json({ message: 'Team slettet' });
+  } catch (err) {
+    console.error('Delete team error:', err);
     res.status(500).json({ error: 'Server fejl' });
   }
 });

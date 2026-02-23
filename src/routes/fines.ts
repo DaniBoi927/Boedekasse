@@ -371,6 +371,53 @@ router.post('/:id/pay', authMiddleware, async (req: any, res) => {
   }
 });
 
+// Update fine amount (only formand) - for lucky wheel
+router.put('/:id', authMiddleware, async (req: any, res) => {
+  const { id } = req.params;
+  const { amount, wheel_used } = req.body;
+  const userId = req.userId;
+
+  if (amount == null || amount < 0) {
+    return res.status(400).json({ error: 'Ugyldigt beløb' });
+  }
+
+  try {
+    const pool = await getPool();
+
+    // Get fine to check team and wheel status
+    const fineResult = await pool.request()
+      .input('id', id)
+      .query('SELECT * FROM fines WHERE id = @id');
+
+    if (!fineResult.recordset.length) {
+      return res.status(404).json({ error: 'Bøde ikke fundet' });
+    }
+
+    const fine = fineResult.recordset[0];
+
+    // Check if wheel already used
+    if (wheel_used && fine.wheel_used) {
+      return res.status(400).json({ error: 'Lykkehjulet er allerede brugt på denne bøde' });
+    }
+
+    // Check if user is formand
+    if (fine.team_id && !(await isFormand(pool, fine.team_id, userId))) {
+      return res.status(403).json({ error: 'Kun formanden kan ændre bøder' });
+    }
+
+    await pool.request()
+      .input('id', id)
+      .input('amount', amount)
+      .input('wheel_used', wheel_used ? 1 : fine.wheel_used || 0)
+      .query('UPDATE fines SET amount = @amount, wheel_used = @wheel_used WHERE id = @id');
+
+    res.json({ message: 'Bøde opdateret' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server fejl' });
+  }
+});
+
 // Delete fine (only formand)
 router.delete('/:id', authMiddleware, async (req: any, res) => {
   const { id } = req.params;

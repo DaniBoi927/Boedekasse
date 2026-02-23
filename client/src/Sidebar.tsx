@@ -6,6 +6,7 @@ export default function Sidebar() {
   const [showCreateTeam, setShowCreateTeam] = useState(false);
   const [showJoinTeam, setShowJoinTeam] = useState(false);
   const [teamName, setTeamName] = useState('');
+  const [mobilepayLink, setMobilepayLink] = useState('');
   const [inviteCode, setInviteCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -22,13 +23,14 @@ export default function Sidebar() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ name: teamName })
+        body: JSON.stringify({ name: teamName, mobilepay_link: mobilepayLink || null })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       
       await loadTeams();
       setTeamName('');
+      setMobilepayLink('');
       setShowCreateTeam(false);
     } catch (err: any) {
       setError(err.message);
@@ -128,6 +130,17 @@ export default function Sidebar() {
                   placeholder="F.eks. Padel Mandagsholdet"
                   required
                 />
+              </div>
+              <div className="form-group">
+                <label htmlFor="mobilepayLink">MobilePay Box link (valgfrit)</label>
+                <input
+                  id="mobilepayLink"
+                  type="url"
+                  value={mobilepayLink}
+                  onChange={e => setMobilepayLink(e.target.value)}
+                  placeholder="https://qr.mobilepay.dk/box/..."
+                />
+                <small className="form-hint">Indsæt dit MobilePay Box link så medlemmer kan betale direkte</small>
               </div>
               {error && <div className="error">{error}</div>}
               <div className="modal-actions">

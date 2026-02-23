@@ -546,16 +546,18 @@ export default function FinesPage() {
         fineId={wheelFine?.id || 0}
       />
 
-      {/* Floating MobilePay Button */}
-      <a 
-        href="https://qr.mobilepay.dk/box/b5158899-fa51-4d48-b6d7-582bc4aa32df/pay-in" 
-        target="_blank" 
-        rel="noopener noreferrer"
-        className="mobilepay-fab"
-      >
-        <span className="mp-icon">📱</span>
-        <span className="mp-text">Betal med MobilePay</span>
-      </a>
+      {/* Floating MobilePay Button - only show if team has mobilepay_link */}
+      {currentTeam?.mobilepay_link && (
+        <a 
+          href={currentTeam.mobilepay_link} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="mobilepay-fab"
+        >
+          <span className="mp-icon">📱</span>
+          <span className="mp-text">Betal med MobilePay</span>
+        </a>
+      )}
     </div>
   );
 }

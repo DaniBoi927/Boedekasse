@@ -13,6 +13,7 @@ type Team = {
   role: string;
   member_count: number;
   created_by?: number;
+  mobilepay_link?: string;
 };
 
 type AuthContextType = {

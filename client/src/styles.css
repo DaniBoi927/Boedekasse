@@ -1025,6 +1025,13 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
   color: #334155;
 }
 
+.form-group small.form-hint {
+  display: block;
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 4px;
+}
+
 .form-group input {
   width: 100%;
   padding: 12px 14px;
@@ -1635,6 +1642,15 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
   background: var(--glass-bg);
   padding: 20px 24px;
   border-radius: 16px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.team-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .team-header h2 {
@@ -1804,6 +1820,43 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
   font-size: 13px;
   color: #64748b;
   text-align: center;
+}
+
+.modal-divider {
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  margin: 24px 0;
+}
+
+.danger-zone {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.danger-zone h3 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: #dc2626;
+}
+
+.danger-zone .muted {
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.danger-btn {
+  background: #dc2626 !important;
+  color: white !important;
+}
+
+.danger-btn:hover {
+  background: #b91c1c !important;
+}
+
+.full-width {
+  width: 100%;
 }
 
 /* ==================== */

@@ -11,15 +11,19 @@ type Member = {
 };
 
 export default function TeamPage() {
-  const { currentTeam, token, isFormand, loadTeams } = useAuth();
+  const { currentTeam, token, isFormand, loadTeams, setCurrentTeam } = useAuth();
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [mobilepayLink, setMobilepayLink] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (currentTeam) {
       loadMembers();
+      setMobilepayLink(currentTeam.mobilepay_link || '');
     }
   }, [currentTeam]);
 
@@ -69,6 +73,62 @@ export default function TeamPage() {
     }
   }
 
+  async function saveTeamSettings() {
+    if (!currentTeam) return;
+    setSaving(true);
+    setError('');
+    try {
+      const res = await fetch(`/api/teams/${currentTeam.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ mobilepay_link: mobilepayLink || null })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      
+      await loadTeams();
+      setShowSettings(false);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function deleteTeam() {
+    if (!currentTeam) return;
+    
+    const confirmed = window.confirm(
+      `Er du sikker på du vil slette "${currentTeam.name}"?\n\nDette sletter ALLE bøder, bødetyper og medlemskaber permanent. Denne handling kan ikke fortrydes!`
+    );
+    
+    if (!confirmed) return;
+    
+    const doubleConfirm = window.confirm(
+      'SIDSTE ADVARSEL: Alle data vil blive slettet permanent. Fortsæt?'
+    );
+    
+    if (!doubleConfirm) return;
+    
+    setError('');
+    try {
+      const res = await fetch(`/api/teams/${currentTeam.id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      
+      setCurrentTeam(null);
+      await loadTeams();
+    } catch (err: any) {
+      setError(err.message);
+    }
+  }
+
   if (!currentTeam) {
     return (
       <div className="team-page empty">
@@ -93,12 +153,19 @@ export default function TeamPage() {
             Du er {currentTeam.role === 'formand' ? '👑 Formand' : '👤 Medlem'}
           </p>
         </div>
-        <div className="invite-code-box">
-          <span className="label">Invitationskode:</span>
-          <code className="invite-code">{currentTeam.invite_code}</code>
-          <button className="copy-btn" onClick={copyInviteCode}>
-            {copied ? '✓ Kopieret!' : '📋 Kopier'}
-          </button>
+        <div className="team-header-actions">
+          {isFormand && (
+            <button className="small-btn" onClick={() => setShowSettings(true)}>
+              ⚙️ Indstillinger
+            </button>
+          )}
+          <div className="invite-code-box">
+            <span className="label">Invitationskode:</span>
+            <code className="invite-code">{currentTeam.invite_code}</code>
+            <button className="copy-btn" onClick={copyInviteCode}>
+              {copied ? '✓ Kopieret!' : '📋 Kopier'}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -156,6 +223,49 @@ export default function TeamPage() {
           </p>
         )}
       </div>
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <div className="modal-overlay" onClick={() => setShowSettings(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h2>⚙️ Team indstillinger</h2>
+            
+            <div className="form-group">
+              <label>MobilePay Box link</label>
+              <input
+                type="url"
+                value={mobilepayLink}
+                onChange={e => setMobilepayLink(e.target.value)}
+                placeholder="https://qr.mobilepay.dk/box/..."
+              />
+              <small className="form-hint">
+                Indsæt dit MobilePay Box link så medlemmer kan betale direkte
+              </small>
+            </div>
+
+            {error && <div className="error">{error}</div>}
+
+            <div className="modal-actions">
+              <button type="button" onClick={() => setShowSettings(false)}>
+                Annuller
+              </button>
+              <button className="primary" onClick={saveTeamSettings} disabled={saving}>
+                {saving ? 'Gemmer...' : 'Gem indstillinger'}
+              </button>
+            </div>
+
+            <hr className="modal-divider" />
+
+            <div className="danger-zone">
+              <h3>⚠️ Farezone</h3>
+              <p className="muted">Disse handlinger kan ikke fortrydes.</p>
+              <button className="danger-btn full-width" onClick={deleteTeam}>
+                🗑️ Slet team permanent
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
