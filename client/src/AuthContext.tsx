@@ -12,6 +12,7 @@ type Team = {
   invite_code: string;
   role: string;
   member_count: number;
+  created_by?: number;
 };
 
 type AuthContextType = {

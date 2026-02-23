@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from './AuthContext';
+import LuckyWheel from './LuckyWheel';
 
 type Fine = {
   id: number;
@@ -11,6 +12,7 @@ type Fine = {
   paid_by?: string | null;
   paid_at?: string | null;
   created_by_name?: string;
+  wheel_used?: boolean;
 };
 
 type Total = {
@@ -51,6 +53,7 @@ export default function FinesPage() {
   const [error, setError] = useState<string | null>(null);
   const [payModalFineId, setPayModalFineId] = useState<number | null>(null);
   const [payModalPayer, setPayModalPayer] = useState('');
+  const [wheelFine, setWheelFine] = useState<Fine | null>(null);
 
   function formatCurrency(v: number) {
     return v.toLocaleString('da-DK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' kr';
@@ -191,6 +194,40 @@ export default function FinesPage() {
     }
   }
 
+  async function handleWheelResult(multiplier: number, label: string) {
+    if (!wheelFine) return;
+    
+    try {
+      setLoading(true);
+      if (multiplier === 0) {
+        // Slet bøden
+        const res = await fetch(`/api/fines/${wheelFine.id}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('Kunne ikke slette bøde');
+      } else {
+        // Opdater beløbet og marker wheel som brugt
+        const newAmount = wheelFine.amount * multiplier;
+        const res = await fetch(`/api/fines/${wheelFine.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ amount: newAmount, wheel_used: true })
+        });
+        if (!res.ok) throw new Error('Kunne ikke opdatere bøde');
+      }
+      await load();
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+      setWheelFine(null);
+    }
+  }
+
   const displayed = fines.filter(f => {
     if (filter === 'all') return true;
     if (filter === 'paid') return !!f.paid;
@@ -217,8 +254,11 @@ export default function FinesPage() {
       <div className="fines-grid">
         <section className="left">
           {isFormand && (
-            <div className="card">
-              <h2>➕ Tilføj bøde</h2>
+            <div className="card add-fine-card">
+              <div className="add-fine-header">
+                <span className="add-fine-icon">🎾</span>
+                <h2>Tilføj bøde</h2>
+              </div>
               <form onSubmit={add} className="add-form">
                 <div className="row">
                   <select
@@ -242,31 +282,28 @@ export default function FinesPage() {
                     min="0"
                   />
                 </div>
-                <div className="fine-type-select-wrapper">
-                  <select
-                    value={selectedFineType}
-                    onChange={e => {
-                      const id = e.target.value;
-                      setSelectedFineType(id ? Number(id) : '');
-                      if (id) {
-                        const ft = fineTypes.find(f => f.id === Number(id));
-                        if (ft) {
-                          setReason(ft.reason);
-                          setAmount(String(ft.amount));
-                        }
+                <select
+                  value={selectedFineType}
+                  onChange={e => {
+                    const id = e.target.value;
+                    setSelectedFineType(id ? Number(id) : '');
+                    if (id) {
+                      const ft = fineTypes.find(f => f.id === Number(id));
+                      if (ft) {
+                        setReason(ft.reason);
+                        setAmount(String(ft.amount));
                       }
-                    }}
-                    className="player-select"
-                  >
-                    <option value="">Vælg bødetype...</option>
-                    {fineTypes.map(ft => (
-                      <option key={ft.id} value={ft.id}>
-                        {ft.reason} ({formatCurrency(ft.amount)})
-                      </option>
-                    ))}
-                  </select>
-                  <span className="or-text">eller skriv selv:</span>
-                </div>
+                    }
+                  }}
+                  className="player-select full-width"
+                >
+                  <option value="">Vælg bødetype...</option>
+                  {fineTypes.map(ft => (
+                    <option key={ft.id} value={ft.id}>
+                      {ft.reason} ({formatCurrency(ft.amount)})
+                    </option>
+                  ))}
+                </select>
                 <input
                   aria-label="reason"
                   placeholder="Eller skriv egen årsag..."
@@ -443,7 +480,12 @@ export default function FinesPage() {
                       {isFormand && (
                         <td className="actions">
                           {!f.paid && (
-                            <button onClick={() => openPayModal(f.id, f.payer)}>✓ Betalt</button>
+                            <>
+                              <button onClick={() => openPayModal(f.id, f.payer)}>✓ Betalt</button>
+                              {!f.wheel_used && (
+                                <button className="wheel-btn" onClick={() => setWheelFine(f)}>🎰</button>
+                              )}
+                            </>
                           )}
                           <button className="danger" onClick={() => deleteFine(f.id)}>Slet</button>
                         </td>
@@ -493,6 +535,16 @@ export default function FinesPage() {
           </div>
         </div>
       )}
+
+      {/* Lucky Wheel */}
+      <LuckyWheel
+        isOpen={!!wheelFine}
+        onClose={() => setWheelFine(null)}
+        onResult={handleWheelResult}
+        fineName={wheelFine?.reason || 'Bøde'}
+        fineAmount={wheelFine?.amount || 0}
+        fineId={wheelFine?.id || 0}
+      />
 
       {/* Floating MobilePay Button */}
       <a 
