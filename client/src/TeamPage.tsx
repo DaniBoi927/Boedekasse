@@ -155,7 +155,7 @@ export default function TeamPage() {
         </div>
         <div className="team-header-actions">
           {isFormand && (
-            <button className="small-btn" onClick={() => setShowSettings(true)}>
+            <button className="settings-btn" onClick={() => setShowSettings(true)}>
               ⚙️ Indstillinger
             </button>
           )}

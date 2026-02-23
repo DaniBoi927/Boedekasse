@@ -1404,8 +1404,8 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
 }
 
 .fine-types-page .page-header h1 {
-  margin: 0 0 12px 0;
-  font-size: 32px;
+  margin: 0 0 8px 0;
+  font-size: 28px;
   color: var(--ball-yellow);
 }
 
@@ -1415,26 +1415,20 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
 }
 
 .page-header h1 {
-  margin: 0 0 12px 0;
-  font-size: 32px;
+  margin: 0 0 8px 0;
+  font-size: 28px;
   color: var(--ball-yellow);
 }
 
 .page-header p {
   margin: 0;
-  color: white;
-  font-size: 18px;
-  background: linear-gradient(135deg, var(--court-green), #1e8449);
-  padding: 12px 20px;
-  border-radius: 10px;
-  display: inline-block;
-  font-weight: 500;
-  box-shadow: 0 4px 12px rgba(45, 140, 60, 0.3);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 15px;
 }
 
 .page-header p .team-name {
   color: var(--ball-yellow);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .error-banner {
@@ -1525,8 +1519,8 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
 }
 
 .fine-type-card {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   padding: 20px;
   display: flex;
@@ -1543,39 +1537,45 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
 .fine-type-card .fine-type-reason {
   font-size: 16px;
   font-weight: 600;
-  color: #1e293b;
+  color: #fff;
 }
 
 .fine-type-card .fine-type-amount {
   font-size: 20px;
   font-weight: 700;
-  color: var(--court-blue);
+  color: var(--ball-yellow);
 }
 
 .fine-type-card .fine-type-actions {
   display: flex;
   gap: 8px;
-  padding-top: 12px;
-  border-top: 1px solid #e2e8f0;
+  justify-content: flex-end;
 }
 
 .fine-type-card .edit-btn,
 .fine-type-card .delete-btn {
-  flex: 1;
-  padding: 10px 16px !important;
-  font-size: 13px !important;
-  border-radius: 8px !important;
+  padding: 6px 12px !important;
+  font-size: 12px !important;
+  border-radius: 6px !important;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.fine-type-card .edit-btn:hover,
+.fine-type-card .delete-btn:hover {
+  opacity: 1;
 }
 
 .fine-type-card .edit-btn {
-  background: #f1f5f9 !important;
-  border: 1px solid #e2e8f0 !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: rgba(255, 255, 255, 0.8) !important;
 }
 
 .fine-type-card .delete-btn {
-  background: #fef2f2 !important;
-  border: 1px solid #fecaca !important;
-  color: #dc2626 !important;
+  background: transparent !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: rgba(255, 255, 255, 0.5) !important;
 }
 
 .fine-type-edit-mode {
@@ -1586,14 +1586,16 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
 
 .fine-type-edit-mode .edit-input {
   padding: 12px 14px;
-  border: 2px solid #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 8px;
   font-size: 15px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
 }
 
 .fine-type-edit-mode .edit-input:focus {
   outline: none;
-  border-color: var(--court-blue);
+  border-color: var(--ball-yellow);
 }
 
 .fine-type-edit-mode .edit-actions {
@@ -1616,8 +1618,9 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
 }
 
 .fine-type-edit-mode .cancel-btn {
-  background: #f1f5f9 !important;
-  border: 1px solid #e2e8f0 !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: #fff !important;
 }
 
 /* ==================== */
@@ -1637,13 +1640,14 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
 .team-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: 24px;
-  background: var(--glass-bg);
-  padding: 20px 24px;
+  background: linear-gradient(135deg, var(--court-blue), var(--court-blue-dark));
+  padding: 24px 28px;
   border-radius: 16px;
   flex-wrap: wrap;
   gap: 16px;
+  box-shadow: 0 4px 20px rgba(30, 64, 100, 0.15);
 }
 
 .team-header-actions {
@@ -1655,21 +1659,26 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
 
 .team-header h2 {
   margin: 0 0 4px 0;
-  color: var(--court-blue-dark);
+  color: white;
+  font-size: 24px;
 }
 
 .team-role {
-  color: #64748b;
+  color: rgba(255, 255, 255, 0.8);
   font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .invite-code-box {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: #f8fafc;
+  background: rgba(255, 255, 255, 0.95);
   padding: 12px 16px;
   border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .invite-code-box .label {
@@ -1693,6 +1702,29 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
   border: none;
   border-radius: 6px;
   cursor: pointer;
+  transition: all 0.2s;
+}
+
+.copy-btn:hover {
+  background: var(--court-blue-dark);
+  transform: scale(1.02);
+}
+
+.settings-btn {
+  padding: 10px 16px;
+  font-size: 14px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.settings-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 .members-list {
