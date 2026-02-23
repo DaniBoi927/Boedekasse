@@ -1738,7 +1738,7 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
   align-items: center;
   gap: 12px;
   padding: 12px 0;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .member-item:last-child {
@@ -1765,13 +1765,14 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
 }
 
 .member-name {
-  font-weight: 500;
-  color: #1f2937;
+  font-weight: 600;
+  color: #fff;
+  font-size: 15px;
 }
 
 .member-email {
-  font-size: 12px;
-  color: #64748b;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .member-role {
