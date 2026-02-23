@@ -132,6 +132,14 @@ export default function TeamPage() {
                     Gør til formand
                   </button>
                 )}
+                {isFormand && member.role === 'formand' && member.user_id !== currentTeam?.created_by && (
+                  <button 
+                    className="small-btn danger-btn"
+                    onClick={() => changeRole(member.id, 'member')}
+                  >
+                    Fjern formand
+                  </button>
+                )}
               </li>
             ))}
           </ul>

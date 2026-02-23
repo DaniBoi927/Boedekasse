@@ -37,7 +37,7 @@ type FineType = {
 };
 
 export default function FinesPage() {
-  const { currentTeam, token, isFormand } = useAuth();
+  const { currentTeam, token, isFormand, user } = useAuth();
   const [fines, setFines] = useState<Fine[]>([]);
   const [totals, setTotals] = useState<Total[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
@@ -49,6 +49,8 @@ export default function FinesPage() {
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState<'all' | 'unpaid' | 'paid'>('all');
   const [error, setError] = useState<string | null>(null);
+  const [payModalFineId, setPayModalFineId] = useState<number | null>(null);
+  const [payModalPayer, setPayModalPayer] = useState('');
 
   function formatCurrency(v: number) {
     return v.toLocaleString('da-DK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' kr';
@@ -139,8 +141,7 @@ export default function FinesPage() {
     }
   }
 
-  async function markPaid(id: number) {
-    const paid_by = prompt('Hvem betalte?') || '';
+  async function markPaid(id: number, paid_by: string) {
     if (!paid_by) return;
     try {
       setLoading(true);
@@ -154,6 +155,8 @@ export default function FinesPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
+      setPayModalFineId(null);
+      setPayModalPayer('');
       await load();
     } catch (e: any) {
       console.error(e);
@@ -161,6 +164,11 @@ export default function FinesPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function openPayModal(fineId: number, currentPayer: string) {
+    setPayModalFineId(fineId);
+    setPayModalPayer(currentPayer);
   }
 
   async function deleteFine(id: number) {
@@ -291,17 +299,63 @@ export default function FinesPage() {
             </div>
           )}
 
+          {/* Personligt overblik */}
+          {user && totals.length > 0 && (
+            <div className="card personal-summary">
+              <h2>👤 Dit overblik</h2>
+              {(() => {
+                const myTotal = totals.find(t => t.payer === user.name);
+                const myOutstanding = myTotal ? Number(myTotal.outstanding) : 0;
+                const myPaid = myTotal ? Number(myTotal.total) - Number(myTotal.outstanding) : 0;
+                return (
+                  <div className="personal-stats">
+                    <div className={`personal-outstanding ${myOutstanding > 0 ? 'owes' : 'clear'}`}>
+                      <span className="label">Du skylder:</span>
+                      <span className="amount">
+                        {myOutstanding > 0 ? formatCurrency(myOutstanding) : '✓ Intet!'}
+                      </span>
+                    </div>
+                    {myPaid > 0 && (
+                      <div className="personal-paid">
+                        <span className="small-label">Du har betalt {formatCurrency(myPaid)} i alt</span>
+                      </div>
+                    )}
+                    {myOutstanding === 0 && myPaid === 0 && (
+                      <div className="personal-clean">
+                        <span className="small-label">🎉 Du har ingen bøder endnu!</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+
           <div className="card">
             <h2>🏆 Leaderboard</h2>
             {totals.length === 0 ? (
               <div className="muted">Ingen data endnu</div>
             ) : (
               <>
-                <div className="team-total">
-                  <span className="label">Samlet udestående:</span>
-                  <span className="amount">
-                    {formatCurrency(totals.reduce((sum, t) => sum + Number(t.outstanding), 0))}
-                  </span>
+                <div className="team-stats">
+                  <div className="team-total">
+                    <span className="label">💰 Samlet udestående:</span>
+                    <span className="amount outstanding">
+                      {formatCurrency(totals.reduce((sum, t) => sum + Number(t.outstanding), 0))}
+                    </span>
+                  </div>
+                  <div className="team-total">
+                    <span className="label">✅ All-time betalt:</span>
+                    <span className="amount paid">
+                      {formatCurrency(totals.reduce((sum, t) => sum + (Number(t.total) - Number(t.outstanding)), 0))}
+                    </span>
+                  </div>
+                  <div className="team-total grand-total">
+                    <span className="label">📊 Total bøder (all-time):</span>
+                    <span className="amount">
+                      {formatCurrency(totals.reduce((sum, t) => sum + Number(t.total), 0))}
+                    </span>
+                  </div>
                 </div>
                 <ul className="leaderboard">
                   {[...totals]
@@ -375,7 +429,6 @@ export default function FinesPage() {
                     <th>Spiller</th>
                     <th>Beløb</th>
                     <th>Årsag</th>
-                    <th>Dato</th>
                     <th>Betalt</th>
                     {isFormand && <th></th>}
                   </tr>
@@ -386,14 +439,11 @@ export default function FinesPage() {
                       <td>{f.payer}</td>
                       <td>{formatCurrency(Number(f.amount))}</td>
                       <td className="reason">{f.reason}</td>
-                      <td className="muted small">
-                        {f.created_at ? new Date(f.created_at).toLocaleString('da-DK') : ''}
-                      </td>
                       <td>{f.paid ? `Ja ${f.paid_by ? `(${f.paid_by})` : ''}` : 'Nej'}</td>
                       {isFormand && (
                         <td className="actions">
                           {!f.paid && (
-                            <button onClick={() => markPaid(f.id)}>Marker betalt</button>
+                            <button onClick={() => openPayModal(f.id, f.payer)}>✓ Betalt</button>
                           )}
                           <button className="danger" onClick={() => deleteFine(f.id)}>Slet</button>
                         </td>
@@ -412,6 +462,48 @@ export default function FinesPage() {
           </div>
         </section>
       </div>
+
+      {/* Pay Modal */}
+      {payModalFineId && (
+        <div className="modal-overlay" onClick={() => setPayModalFineId(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h3>💰 Marker som betalt</h3>
+            <p className="modal-subtitle">Hvem har betalt denne bøde?</p>
+            <select
+              value={payModalPayer}
+              onChange={e => setPayModalPayer(e.target.value)}
+              className="player-select"
+              autoFocus
+            >
+              <option value="">Vælg medlem...</option>
+              {members.map(m => (
+                <option key={m.user_id} value={m.name}>{m.name}</option>
+              ))}
+            </select>
+            <div className="modal-actions">
+              <button 
+                className="primary" 
+                onClick={() => markPaid(payModalFineId, payModalPayer)}
+                disabled={!payModalPayer || loading}
+              >
+                {loading ? 'Gemmer...' : 'Bekræft betaling'}
+              </button>
+              <button onClick={() => setPayModalFineId(null)}>Annuller</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating MobilePay Button */}
+      <a 
+        href="https://qr.mobilepay.dk/box/b5158899-fa51-4d48-b6d7-582bc4aa32df/pay-in" 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="mobilepay-fab"
+      >
+        <span className="mp-icon">📱</span>
+        <span className="mp-text">Betal med MobilePay</span>
+      </a>
     </div>
   );
 }
