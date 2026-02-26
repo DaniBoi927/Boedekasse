@@ -8,7 +8,6 @@ type StandingTeam = {
   played: number;
   wins: string;
   sets: string;
-  games: string;
   isCurrentTeam?: boolean;
 };
 
@@ -51,7 +50,7 @@ export default function LeaguePage() {
 
   // Standing form
   const [standingForm, setStandingForm] = useState({
-    position: 1, name: '', points: 0, played: 0, wins: '0-0', sets: '0-0', games: '0-0', isCurrentTeam: false
+    position: 1, name: '', points: 0, played: 0, wins: '0-0', sets: '0-0', isCurrentTeam: false
   });
 
   // Match form
@@ -140,7 +139,7 @@ export default function LeaguePage() {
         throw new Error(data.error);
       }
       setShowAddStanding(false);
-      setStandingForm({ position: (leagueData?.standings.length || 0) + 1, name: '', points: 0, played: 0, wins: '0-0', sets: '0-0', games: '0-0', isCurrentTeam: false });
+      setStandingForm({ position: (leagueData?.standings.length || 0) + 1, name: '', points: 0, played: 0, wins: '0-0', sets: '0-0', isCurrentTeam: false });
       await loadLeagueData();
     } catch (err: any) {
       setError(err.message);
@@ -355,14 +354,6 @@ export default function LeaguePage() {
                 placeholder="4-2"
               />
             </div>
-            <div className="form-group">
-              <label>Partier</label>
-              <input
-                value={standingForm.games}
-                onChange={e => setStandingForm({...standingForm, games: e.target.value})}
-                placeholder="10-6"
-              />
-            </div>
           </div>
 
           <label className="checkbox-label">
@@ -537,7 +528,7 @@ export default function LeaguePage() {
           <h2>📊 Tabel</h2>
           {isFormand && (
             <button className="small-btn" onClick={() => {
-              setStandingForm({ position: (leagueData.standings.length || 0) + 1, name: '', points: 0, played: 0, wins: '0-0', sets: '0-0', games: '0-0', isCurrentTeam: false });
+              setStandingForm({ position: (leagueData.standings.length || 0) + 1, name: '', points: 0, played: 0, wins: '0-0', sets: '0-0', isCurrentTeam: false });
               setShowAddStanding(true);
             }}>
               ➕ Tilføj hold
@@ -558,9 +549,8 @@ export default function LeaguePage() {
                   <th className="team">Hold</th>
                   <th className="pts">Point</th>
                   <th className="played">Spillet</th>
-                  <th className="wins">Sejre</th>
+                  <th className="wins">M (W-L)</th>
                   <th className="sets">Sæt</th>
-                  <th className="games">Partier</th>
                   {isFormand && <th className="actions"></th>}
                 </tr>
               </thead>
@@ -576,7 +566,6 @@ export default function LeaguePage() {
                     <td className="played">{team.played}</td>
                     <td className="wins">{team.wins}</td>
                     <td className="sets">{team.sets}</td>
-                    <td className="games">{team.games}</td>
                     {isFormand && (
                       <td className="actions">
                         <button className="delete-btn-small" onClick={() => deleteStanding(team.position)}>🗑️</button>
