@@ -377,91 +377,93 @@ export default function LeaguePage() {
     );
   }
 
-  // Add match modal
+  // Add match modal - simplified
   if (showAddMatch) {
     return (
       <div className="league-page">
-        <div className="page-header">
-          <h1>🏆 Liga</h1>
-          <p>Tilføj kamp</p>
-        </div>
+        <div className="match-form-overlay">
+          <div className="match-form-card">
+            <button className="close-btn" onClick={() => setShowAddMatch(false)}>×</button>
+            
+            <h2>📅 Ny kamp</h2>
+            
+            {error && <div className="error-banner">{error}</div>}
 
-        <div className="card league-setup-card">
-          <h2>➕ Tilføj kamp</h2>
-
-          {error && <div className="error-banner">{error}</div>}
-
-          <div className="form-row-grid">
-            <div className="form-group">
-              <label>Runde</label>
+            {/* Teams */}
+            <div className="match-form-teams">
               <input
-                type="number"
-                value={matchForm.round}
-                onChange={e => setMatchForm({...matchForm, round: parseInt(e.target.value)})}
-                min="1"
-              />
-            </div>
-            <div className="form-group">
-              <label>Dato</label>
-              <input
-                type="date"
-                value={matchForm.date}
-                onChange={e => setMatchForm({...matchForm, date: e.target.value})}
-              />
-            </div>
-            <div className="form-group">
-              <label>Tid</label>
-              <input
-                type="time"
-                value={matchForm.time}
-                onChange={e => setMatchForm({...matchForm, time: e.target.value})}
-              />
-            </div>
-          </div>
-
-          <div className="form-row-grid">
-            <div className="form-group">
-              <label>Hjemmehold</label>
-              <input
+                className="team-input home"
                 value={matchForm.homeTeam}
                 onChange={e => setMatchForm({...matchForm, homeTeam: e.target.value})}
                 placeholder="Hjemmehold"
               />
-            </div>
-            <div className="form-group">
-              <label>Udehold</label>
+              <span className="vs-badge">VS</span>
               <input
+                className="team-input away"
                 value={matchForm.awayTeam}
                 onChange={e => setMatchForm({...matchForm, awayTeam: e.target.value})}
                 placeholder="Udehold"
               />
             </div>
-          </div>
 
-          <div className="form-row-grid">
-            <div className="form-group">
-              <label>Resultat (tom = kommende)</label>
-              <input
-                value={matchForm.result}
-                onChange={e => setMatchForm({...matchForm, result: e.target.value})}
-                placeholder="3-0"
-              />
+            {/* When */}
+            <div className="match-form-when">
+              <div className="when-item">
+                <span className="when-icon">📆</span>
+                <input
+                  type="date"
+                  value={matchForm.date}
+                  onChange={e => setMatchForm({...matchForm, date: e.target.value})}
+                />
+              </div>
+              <div className="when-item">
+                <span className="when-icon">🕐</span>
+                <input
+                  type="time"
+                  value={matchForm.time}
+                  onChange={e => setMatchForm({...matchForm, time: e.target.value})}
+                />
+              </div>
             </div>
-            <div className="form-group">
-              <label>Lokation</label>
+
+            {/* Where */}
+            <div className="match-form-where">
+              <span className="where-icon">📍</span>
               <input
                 value={matchForm.location}
                 onChange={e => setMatchForm({...matchForm, location: e.target.value})}
-                placeholder="Padel Arena"
+                placeholder="Lokation (valgfri)"
               />
             </div>
-          </div>
 
-          <div className="button-row">
-            <button className="primary" onClick={addMatch} disabled={saving || !matchForm.homeTeam || !matchForm.awayTeam}>
-              {saving ? 'Gemmer...' : '➕ Tilføj'}
+            {/* Round & Result (optional) */}
+            <div className="match-form-extras">
+              <div className="extra-item">
+                <label>Runde</label>
+                <input
+                  type="number"
+                  value={matchForm.round}
+                  onChange={e => setMatchForm({...matchForm, round: parseInt(e.target.value) || 1})}
+                  min="1"
+                />
+              </div>
+              <div className="extra-item">
+                <label>Resultat</label>
+                <input
+                  value={matchForm.result}
+                  onChange={e => setMatchForm({...matchForm, result: e.target.value})}
+                  placeholder="3-0"
+                />
+              </div>
+            </div>
+
+            <button 
+              className="primary full-width" 
+              onClick={addMatch} 
+              disabled={saving || !matchForm.homeTeam || !matchForm.awayTeam}
+            >
+              {saving ? 'Gemmer...' : '✓ Tilføj kamp'}
             </button>
-            <button onClick={() => setShowAddMatch(false)}>Annuller</button>
           </div>
         </div>
       </div>
