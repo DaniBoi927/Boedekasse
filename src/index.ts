@@ -5,6 +5,7 @@ import path from 'path';
 import finesRouter from './routes/fines';
 import authRouter from './routes/auth';
 import teamsRouter from './routes/teams';
+import leagueRouter from './routes/league';
 
 dotenv.config();
 
@@ -14,6 +15,7 @@ app.use(express.json());
 
 app.use('/api/auth', authRouter);
 app.use('/api/teams', teamsRouter);
+app.use('/api/teams', leagueRouter);
 app.use('/api/fines', finesRouter);
 
 app.get('/health', (req, res) => res.json({ ok: true }));

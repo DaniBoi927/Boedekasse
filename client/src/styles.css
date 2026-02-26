@@ -2107,3 +2107,257 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
     justify-content: center;
   }
 }
+
+/* ==================== */
+/* LEAGUE PAGE */
+/* ==================== */
+.league-page {
+  padding: 24px;
+  position: relative;
+}
+
+.league-page.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+}
+
+.league-settings-btn {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+}
+
+.league-setup-card {
+  max-width: 500px;
+}
+
+.league-setup-card .setup-description {
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 24px;
+}
+
+.league-setup-card .field-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.league-setup-card .button-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+/* Standings Table */
+.standings-card {
+  margin-bottom: 24px;
+}
+
+.standings-table-wrapper {
+  overflow-x: auto;
+  margin: 16px 0;
+}
+
+.standings-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.standings-table th {
+  text-align: left;
+  padding: 12px 8px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.standings-table td {
+  padding: 12px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.standings-table .pos {
+  width: 40px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.standings-table .team {
+  font-weight: 500;
+}
+
+.standings-table .team-marker {
+  color: var(--ball-yellow);
+  margin-right: 8px;
+}
+
+.standings-table .pts {
+  font-weight: 700;
+  color: var(--ball-yellow);
+  font-size: 16px;
+}
+
+.standings-table tr.current-team {
+  background: rgba(var(--ball-yellow-rgb, 255, 204, 0), 0.1);
+}
+
+.standings-table tr.current-team td {
+  color: var(--ball-yellow);
+}
+
+.standings-table tr.current-team .pos {
+  color: var(--ball-yellow);
+}
+
+.last-updated {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+  text-align: right;
+}
+
+/* Matches */
+.matches-card {
+  margin-bottom: 24px;
+}
+
+.matches-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.match-item {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.match-item.our-match {
+  border-color: var(--ball-yellow);
+  background: rgba(255, 204, 0, 0.05);
+}
+
+.match-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.match-round {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--court-blue);
+  background: rgba(59, 130, 246, 0.2);
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+.match-date {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.match-teams {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.match-teams .home-team,
+.match-teams .away-team {
+  flex: 1;
+  color: #fff;
+}
+
+.match-teams .home-team {
+  text-align: right;
+}
+
+.match-teams .away-team {
+  text-align: left;
+}
+
+.match-teams .our-team {
+  color: var(--ball-yellow);
+  font-weight: 700;
+}
+
+.match-teams .vs {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.match-teams .match-result {
+  background: var(--court-green);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.match-location {
+  margin-top: 12px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+}
+
+.played-matches .match-item {
+  opacity: 0.8;
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px;
+  gap: 16px;
+}
+
+.loading-state .loading-spinner {
+  font-size: 40px;
+  animation: spin 1s linear infinite;
+}
+
+@media (max-width: 768px) {
+  .standings-table {
+    font-size: 12px;
+  }
+  
+  .standings-table th,
+  .standings-table td {
+    padding: 8px 4px;
+  }
+  
+  .standings-table .wins,
+  .standings-table .sets,
+  .standings-table .games {
+    display: none;
+  }
+  
+  .match-teams {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .match-teams .home-team,
+  .match-teams .away-team {
+    text-align: center;
+  }
+}
