@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from './AuthContext';
 
 type StandingTeam = {
@@ -39,7 +39,6 @@ export default function LeaguePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showSetup, setShowSetup] = useState(false);
-  const [showAddStanding, setShowAddStanding] = useState(false);
   const [showAddMatch, setShowAddMatch] = useState(false);
   
   // Setup form
@@ -48,10 +47,14 @@ export default function LeaguePage() {
   const [poolName, setPoolName] = useState('');
   const [saving, setSaving] = useState(false);
 
-  // Standing form
-  const [standingForm, setStandingForm] = useState({
-    position: 1, name: '', points: 0, played: 0, wins: '0-0', sets: '0-0', isCurrentTeam: false
-  });
+  // Inline editing
+  const [editingCell, setEditingCell] = useState<{position: number, field: string} | null>(null);
+  const [editValue, setEditValue] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // New team row
+  const [addingTeam, setAddingTeam] = useState(false);
+  const [newTeam, setNewTeam] = useState({ name: '', points: '', played: '', wins: '', sets: '' });
 
   // Match form
   const [matchForm, setMatchForm] = useState({
@@ -63,6 +66,13 @@ export default function LeaguePage() {
       loadLeagueData();
     }
   }, [currentTeam]);
+
+  useEffect(() => {
+    if (editingCell && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [editingCell]);
 
   async function loadLeagueData() {
     if (!currentTeam) return;
@@ -122,8 +132,65 @@ export default function LeaguePage() {
     }
   }
 
-  async function addStanding() {
-    if (!currentTeam) return;
+  // Start editing a cell
+  function startEdit(position: number, field: string, currentValue: any) {
+    if (!isFormand) return;
+    setEditingCell({ position, field });
+    setEditValue(String(currentValue));
+  }
+
+  // Save inline edit
+  async function saveInlineEdit() {
+    if (!editingCell || !currentTeam || !leagueData) return;
+    
+    const team = leagueData.standings.find(t => t.position === editingCell.position);
+    if (!team) return;
+
+    const updatedTeam = { ...team };
+    const field = editingCell.field;
+    
+    if (field === 'points' || field === 'played') {
+      (updatedTeam as any)[field] = parseInt(editValue) || 0;
+    } else if (field === 'isCurrentTeam') {
+      updatedTeam.isCurrentTeam = editValue === 'true';
+    } else {
+      (updatedTeam as any)[field] = editValue;
+    }
+
+    try {
+      // Delete old and add updated
+      await fetch(`/api/teams/${currentTeam.id}/league/standing/${team.position}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      await fetch(`/api/teams/${currentTeam.id}/league/standing`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(updatedTeam)
+      });
+      
+      setEditingCell(null);
+      await loadLeagueData();
+    } catch (err: any) {
+      setError(err.message);
+    }
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'Enter') {
+      saveInlineEdit();
+    } else if (e.key === 'Escape') {
+      setEditingCell(null);
+    }
+  }
+
+  // Add new team row
+  async function addTeamRow() {
+    if (!currentTeam || !newTeam.name.trim()) return;
     setSaving(true);
     try {
       const res = await fetch(`/api/teams/${currentTeam.id}/league/standing`, {
@@ -132,14 +199,19 @@ export default function LeaguePage() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify(standingForm)
+        body: JSON.stringify({
+          position: (leagueData?.standings.length || 0) + 1,
+          name: newTeam.name,
+          points: parseInt(newTeam.points) || 0,
+          played: parseInt(newTeam.played) || 0,
+          wins: newTeam.wins || '0-0',
+          sets: newTeam.sets || '0-0',
+          isCurrentTeam: false
+        })
       });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error);
-      }
-      setShowAddStanding(false);
-      setStandingForm({ position: (leagueData?.standings.length || 0) + 1, name: '', points: 0, played: 0, wins: '0-0', sets: '0-0', isCurrentTeam: false });
+      if (!res.ok) throw new Error('Kunne ikke tilføje hold');
+      setAddingTeam(false);
+      setNewTeam({ name: '', points: '', played: '', wins: '', sets: '' });
       await loadLeagueData();
     } catch (err: any) {
       setError(err.message);
@@ -149,13 +221,39 @@ export default function LeaguePage() {
   }
 
   async function deleteStanding(position: number) {
-    if (!currentTeam || !confirm('Slet denne placering?')) return;
+    if (!currentTeam || !confirm('Slet dette hold?')) return;
     try {
       const res = await fetch(`/api/teams/${currentTeam.id}/league/standing/${position}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('Kunne ikke slette');
+      await loadLeagueData();
+    } catch (err: any) {
+      setError(err.message);
+    }
+  }
+
+  async function toggleCurrentTeam(position: number) {
+    if (!currentTeam || !leagueData) return;
+    const team = leagueData.standings.find(t => t.position === position);
+    if (!team) return;
+
+    try {
+      await fetch(`/api/teams/${currentTeam.id}/league/standing/${position}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      await fetch(`/api/teams/${currentTeam.id}/league/standing`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ ...team, isCurrentTeam: !team.isCurrentTeam })
+      });
+      
       await loadLeagueData();
     } catch (err: any) {
       setError(err.message);
@@ -204,10 +302,10 @@ export default function LeaguePage() {
 
   if (!currentTeam) {
     return (
-      <div className="league-page empty">
+      <div className="league-page">
         <div className="empty-state">
-          <h2>🏆 Liga</h2>
-          <p>Vælg eller opret et team for at se liga information.</p>
+          <span className="icon">🏆</span>
+          <p>Vælg et hold for at se liga</p>
         </div>
       </div>
     );
@@ -216,12 +314,9 @@ export default function LeaguePage() {
   if (loading) {
     return (
       <div className="league-page">
-        <div className="page-header">
-          <h1>🏆 Liga</h1>
-        </div>
         <div className="loading-state">
-          <div className="loading-spinner">⚽</div>
-          <p>Henter liga data...</p>
+          <span className="loading-spinner">🏐</span>
+          <p>Indlæser liga...</p>
         </div>
       </div>
     );
@@ -233,7 +328,7 @@ export default function LeaguePage() {
       <div className="league-page">
         <div className="page-header">
           <h1>🏆 Liga</h1>
-          <p>Konfigurer liga for {currentTeam.name}</p>
+          <p>Konfigurer din liga</p>
         </div>
 
         <div className="card league-setup-card">
@@ -252,14 +347,13 @@ export default function LeaguePage() {
           </div>
 
           <div className="form-group">
-            <label>Dit holdnavn</label>
+            <label>Dit holdnavn (bruges til at markere jeres hold)</label>
             <input
               type="text"
               placeholder="Fx 'Bajer Før Bandeja'"
               value={teamName}
               onChange={e => setTeamName(e.target.value)}
             />
-            <span className="field-hint">Bruges til at markere jeres kampe</span>
           </div>
 
           <div className="form-group">
@@ -270,7 +364,6 @@ export default function LeaguePage() {
               value={rankedinUrl}
               onChange={e => setRankedinUrl(e.target.value)}
             />
-            <span className="field-hint">Link til jeres liga på Rankedin</span>
           </div>
 
           <div className="button-row">
@@ -278,98 +371,6 @@ export default function LeaguePage() {
               {saving ? 'Gemmer...' : '💾 Gem'}
             </button>
             <button onClick={() => setShowSetup(false)}>Annuller</button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Add standing modal
-  if (showAddStanding) {
-    return (
-      <div className="league-page">
-        <div className="page-header">
-          <h1>🏆 Liga</h1>
-          <p>Tilføj hold til tabellen</p>
-        </div>
-
-        <div className="card league-setup-card">
-          <h2>➕ Tilføj hold</h2>
-
-          {error && <div className="error-banner">{error}</div>}
-
-          <div className="form-row-grid">
-            <div className="form-group">
-              <label>Position</label>
-              <input
-                type="number"
-                value={standingForm.position}
-                onChange={e => setStandingForm({...standingForm, position: parseInt(e.target.value)})}
-                min="1"
-              />
-            </div>
-            <div className="form-group">
-              <label>Holdnavn</label>
-              <input
-                value={standingForm.name}
-                onChange={e => setStandingForm({...standingForm, name: e.target.value})}
-                placeholder="Holdnavn"
-              />
-            </div>
-          </div>
-
-          <div className="form-row-grid">
-            <div className="form-group">
-              <label>Point</label>
-              <input
-                type="number"
-                value={standingForm.points}
-                onChange={e => setStandingForm({...standingForm, points: parseInt(e.target.value) || 0})}
-              />
-            </div>
-            <div className="form-group">
-              <label>Spillet</label>
-              <input
-                type="number"
-                value={standingForm.played}
-                onChange={e => setStandingForm({...standingForm, played: parseInt(e.target.value) || 0})}
-              />
-            </div>
-          </div>
-
-          <div className="form-row-grid">
-            <div className="form-group">
-              <label>Sejre (V-T)</label>
-              <input
-                value={standingForm.wins}
-                onChange={e => setStandingForm({...standingForm, wins: e.target.value})}
-                placeholder="1-0"
-              />
-            </div>
-            <div className="form-group">
-              <label>Sæt</label>
-              <input
-                value={standingForm.sets}
-                onChange={e => setStandingForm({...standingForm, sets: e.target.value})}
-                placeholder="4-2"
-              />
-            </div>
-          </div>
-
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              checked={standingForm.isCurrentTeam}
-              onChange={e => setStandingForm({...standingForm, isCurrentTeam: e.target.checked})}
-            />
-            Dette er vores hold
-          </label>
-
-          <div className="button-row">
-            <button className="primary" onClick={addStanding} disabled={saving || !standingForm.name}>
-              {saving ? 'Gemmer...' : '➕ Tilføj'}
-            </button>
-            <button onClick={() => setShowAddStanding(false)}>Annuller</button>
           </div>
         </div>
       </div>
@@ -424,7 +425,7 @@ export default function LeaguePage() {
               <input
                 value={matchForm.homeTeam}
                 onChange={e => setMatchForm({...matchForm, homeTeam: e.target.value})}
-                placeholder="Holdnavn"
+                placeholder="Hjemmehold"
               />
             </div>
             <div className="form-group">
@@ -432,27 +433,28 @@ export default function LeaguePage() {
               <input
                 value={matchForm.awayTeam}
                 onChange={e => setMatchForm({...matchForm, awayTeam: e.target.value})}
-                placeholder="Holdnavn"
+                placeholder="Udehold"
               />
             </div>
           </div>
 
-          <div className="form-group">
-            <label>Resultat (valgfri - efterlad tom for kommende kamp)</label>
-            <input
-              value={matchForm.result}
-              onChange={e => setMatchForm({...matchForm, result: e.target.value})}
-              placeholder="Fx 4-2"
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Lokation</label>
-            <input
-              value={matchForm.location}
-              onChange={e => setMatchForm({...matchForm, location: e.target.value})}
-              placeholder="Hallens navn og adresse"
-            />
+          <div className="form-row-grid">
+            <div className="form-group">
+              <label>Resultat (tom = kommende)</label>
+              <input
+                value={matchForm.result}
+                onChange={e => setMatchForm({...matchForm, result: e.target.value})}
+                placeholder="3-0"
+              />
+            </div>
+            <div className="form-group">
+              <label>Lokation</label>
+              <input
+                value={matchForm.location}
+                onChange={e => setMatchForm({...matchForm, location: e.target.value})}
+                placeholder="Padel Arena"
+              />
+            </div>
           </div>
 
           <div className="button-row">
@@ -466,16 +468,11 @@ export default function LeaguePage() {
     );
   }
 
-  // No data yet - show setup prompt
+  // No league data yet
   if (!leagueData) {
     return (
-      <div className="league-page">
-        <div className="page-header">
-          <h1>🏆 Liga</h1>
-          <p>Følg med i jeres liga-placering</p>
-        </div>
-
-        <div className="card">
+      <div className="league-page empty">
+        <div className="card league-setup-card">
           <div className="empty-state">
             <span className="icon">📊</span>
             <p>Liga er ikke konfigureret endnu</p>
@@ -495,6 +492,36 @@ export default function LeaguePage() {
   const upcomingMatches = leagueData.matches.filter(m => m.isUpcoming);
   const playedMatches = leagueData.matches.filter(m => !m.isUpcoming);
 
+  // Render editable cell
+  function renderCell(team: StandingTeam, field: string, value: any, className: string = '') {
+    const isEditing = editingCell?.position === team.position && editingCell?.field === field;
+    
+    if (isEditing) {
+      return (
+        <td className={className}>
+          <input
+            ref={inputRef}
+            className="inline-edit-input"
+            value={editValue}
+            onChange={e => setEditValue(e.target.value)}
+            onBlur={saveInlineEdit}
+            onKeyDown={handleKeyDown}
+          />
+        </td>
+      );
+    }
+    
+    return (
+      <td 
+        className={`${className} ${isFormand ? 'editable' : ''}`}
+        onClick={() => startEdit(team.position, field, value)}
+      >
+        {field === 'name' && team.isCurrentTeam && <span className="team-marker">●</span>}
+        {value}
+      </td>
+    );
+  }
+
   return (
     <div className="league-page">
       <div className="page-header">
@@ -504,7 +531,7 @@ export default function LeaguePage() {
 
       {isFormand && (
         <button className="settings-btn league-settings-btn" onClick={() => setShowSetup(true)}>
-          ⚙️ Rediger
+          ⚙️
         </button>
       )}
 
@@ -518,38 +545,26 @@ export default function LeaguePage() {
           rel="noopener noreferrer"
           className="rankedin-link"
         >
-          🔗 Se fuld tabel på Rankedin
+          🔗 Se på Rankedin
         </a>
       )}
 
-      {/* Standings Table */}
-      <div className="card standings-card">
-        <div className="card-header-row">
-          <h2>📊 Tabel</h2>
-          {isFormand && (
-            <button className="small-btn" onClick={() => {
-              setStandingForm({ position: (leagueData.standings.length || 0) + 1, name: '', points: 0, played: 0, wins: '0-0', sets: '0-0', isCurrentTeam: false });
-              setShowAddStanding(true);
-            }}>
-              ➕ Tilføj hold
-            </button>
-          )}
-        </div>
-
-        {leagueData.standings.length === 0 ? (
-          <div className="empty-state small">
-            <p>Ingen hold tilføjet endnu</p>
+      <div className="league-grid">
+        {/* Standings Table */}
+        <div className="card standings-card">
+          <div className="card-header-row">
+            <h2>📊 Tabel</h2>
           </div>
-        ) : (
+
           <div className="standings-table-wrapper">
             <table className="standings-table">
               <thead>
                 <tr>
                   <th className="pos">#</th>
                   <th className="team">Hold</th>
-                  <th className="pts">Point</th>
-                  <th className="played">Spillet</th>
-                  <th className="wins">M (W-L)</th>
+                  <th className="pts">P</th>
+                  <th className="played">S</th>
+                  <th className="wins">M</th>
                   <th className="sets">Sæt</th>
                   {isFormand && <th className="actions"></th>}
                 </tr>
@@ -558,117 +573,179 @@ export default function LeaguePage() {
                 {leagueData.standings.map(team => (
                   <tr key={team.position} className={team.isCurrentTeam ? 'current-team' : ''}>
                     <td className="pos">{team.position}.</td>
-                    <td className="team">
-                      {team.isCurrentTeam && <span className="team-marker">●</span>}
-                      {team.name}
-                    </td>
-                    <td className="pts">{team.points}</td>
-                    <td className="played">{team.played}</td>
-                    <td className="wins">{team.wins}</td>
-                    <td className="sets">{team.sets}</td>
+                    {renderCell(team, 'name', team.name, 'team')}
+                    {renderCell(team, 'points', team.points, 'pts')}
+                    {renderCell(team, 'played', team.played, 'played')}
+                    {renderCell(team, 'wins', team.wins, 'wins')}
+                    {renderCell(team, 'sets', team.sets, 'sets')}
                     {isFormand && (
                       <td className="actions">
+                        <button 
+                          className={`star-btn ${team.isCurrentTeam ? 'active' : ''}`} 
+                          onClick={() => toggleCurrentTeam(team.position)}
+                          title="Marker som vores hold"
+                        >
+                          ★
+                        </button>
                         <button className="delete-btn-small" onClick={() => deleteStanding(team.position)}>🗑️</button>
                       </td>
                     )}
                   </tr>
                 ))}
+                
+                {/* Add new team row */}
+                {isFormand && addingTeam && (
+                  <tr className="adding-row">
+                    <td className="pos">{(leagueData.standings.length || 0) + 1}.</td>
+                    <td className="team">
+                      <input
+                        className="inline-edit-input"
+                        placeholder="Holdnavn"
+                        value={newTeam.name}
+                        onChange={e => setNewTeam({...newTeam, name: e.target.value})}
+                        autoFocus
+                      />
+                    </td>
+                    <td className="pts">
+                      <input
+                        className="inline-edit-input small"
+                        placeholder="0"
+                        value={newTeam.points}
+                        onChange={e => setNewTeam({...newTeam, points: e.target.value})}
+                      />
+                    </td>
+                    <td className="played">
+                      <input
+                        className="inline-edit-input small"
+                        placeholder="0"
+                        value={newTeam.played}
+                        onChange={e => setNewTeam({...newTeam, played: e.target.value})}
+                      />
+                    </td>
+                    <td className="wins">
+                      <input
+                        className="inline-edit-input small"
+                        placeholder="0-0"
+                        value={newTeam.wins}
+                        onChange={e => setNewTeam({...newTeam, wins: e.target.value})}
+                      />
+                    </td>
+                    <td className="sets">
+                      <input
+                        className="inline-edit-input small"
+                        placeholder="0-0"
+                        value={newTeam.sets}
+                        onChange={e => setNewTeam({...newTeam, sets: e.target.value})}
+                      />
+                    </td>
+                    <td className="actions">
+                      <button className="save-btn" onClick={addTeamRow} disabled={!newTeam.name.trim()}>✓</button>
+                      <button className="cancel-btn" onClick={() => { setAddingTeam(false); setNewTeam({ name: '', points: '', played: '', wins: '', sets: '' }); }}>✕</button>
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
-        )}
 
-        {leagueData.lastUpdated && (
-          <div className="last-updated">
-            Sidst opdateret: {new Date(leagueData.lastUpdated).toLocaleString('da-DK')}
-          </div>
-        )}
-      </div>
-
-      {/* Matches */}
-      <div className="card matches-card">
-        <div className="card-header-row">
-          <h2>📅 Kampe</h2>
-          {isFormand && (
-            <button className="small-btn" onClick={() => {
-              setMatchForm({ round: (leagueData.matches.length || 0) + 1, date: '', time: '', homeTeam: '', awayTeam: '', result: '', location: '' });
-              setShowAddMatch(true);
-            }}>
-              ➕ Tilføj kamp
+          {isFormand && !addingTeam && (
+            <button className="add-row-btn" onClick={() => setAddingTeam(true)}>
+              + Tilføj hold
             </button>
+          )}
+
+          {leagueData.lastUpdated && (
+            <div className="last-updated">
+              Opdateret: {new Date(leagueData.lastUpdated).toLocaleDateString('da-DK')}
+            </div>
           )}
         </div>
 
-        {leagueData.matches.length === 0 ? (
-          <div className="empty-state small">
-            <p>Ingen kampe tilføjet endnu</p>
-          </div>
-        ) : (
-          <div className="matches-list">
-            {/* Upcoming */}
-            {upcomingMatches.length > 0 && (
-              <>
-                <h3 className="matches-section-title">Kommende kampe</h3>
-                {upcomingMatches.map(match => (
-                  <div 
-                    key={match.id} 
-                    className={`match-item ${match.involvesCurrentTeam ? 'our-match' : ''}`}
-                  >
-                    <div className="match-header">
-                      <span className="match-round">Runde {match.round}</span>
-                      <span className="match-date">{match.date} {match.time && `kl. ${match.time}`}</span>
-                      {isFormand && (
-                        <button className="delete-btn-small" onClick={() => deleteMatch(match.id)}>🗑️</button>
-                      )}
-                    </div>
-                    <div className="match-teams">
-                      <span className={`home-team ${match.homeTeam.toLowerCase() === teamName?.toLowerCase() ? 'our-team' : ''}`}>
-                        {match.homeTeam}
-                      </span>
-                      <span className="vs">vs</span>
-                      <span className={`away-team ${match.awayTeam.toLowerCase() === teamName?.toLowerCase() ? 'our-team' : ''}`}>
-                        {match.awayTeam}
-                      </span>
-                    </div>
-                    {match.location && (
-                      <div className="match-location">📍 {match.location}</div>
-                    )}
-                  </div>
-                ))}
-              </>
+        {/* Matches */}
+        <div className="card matches-card">
+          <div className="card-header-row">
+            <h2>📅 Kampe</h2>
+            {isFormand && (
+              <button className="small-btn" onClick={() => {
+                setMatchForm({ round: (leagueData.matches.length || 0) + 1, date: '', time: '', homeTeam: '', awayTeam: '', result: '', location: '' });
+                setShowAddMatch(true);
+              }}>
+                +
+              </button>
             )}
+          </div>
 
-            {/* Played */}
-            {playedMatches.length > 0 && (
-              <>
-                <h3 className="matches-section-title">Spillede kampe</h3>
-                {playedMatches.map(match => (
-                  <div 
-                    key={match.id} 
-                    className={`match-item played ${match.involvesCurrentTeam ? 'our-match' : ''}`}
-                  >
-                    <div className="match-header">
-                      <span className="match-round">Runde {match.round}</span>
-                      <span className="match-date">{match.date}</span>
-                      {isFormand && (
-                        <button className="delete-btn-small" onClick={() => deleteMatch(match.id)}>🗑️</button>
+          {leagueData.matches.length === 0 ? (
+            <div className="empty-state small">
+              <p>Ingen kampe</p>
+            </div>
+          ) : (
+            <div className="matches-list">
+              {/* Upcoming */}
+              {upcomingMatches.length > 0 && (
+                <>
+                  <h3 className="matches-section-title">Kommende</h3>
+                  {upcomingMatches.map(match => (
+                    <div 
+                      key={match.id} 
+                      className={`match-item ${match.involvesCurrentTeam ? 'our-match' : ''}`}
+                    >
+                      <div className="match-header">
+                        <span className="match-round">R{match.round}</span>
+                        <span className="match-date">{match.date} {match.time && `${match.time}`}</span>
+                        {isFormand && (
+                          <button className="delete-btn-small" onClick={() => deleteMatch(match.id)}>×</button>
+                        )}
+                      </div>
+                      <div className="match-teams">
+                        <span className={`home-team ${match.homeTeam.toLowerCase() === teamName?.toLowerCase() ? 'our-team' : ''}`}>
+                          {match.homeTeam}
+                        </span>
+                        <span className="vs">vs</span>
+                        <span className={`away-team ${match.awayTeam.toLowerCase() === teamName?.toLowerCase() ? 'our-team' : ''}`}>
+                          {match.awayTeam}
+                        </span>
+                      </div>
+                      {match.location && (
+                        <div className="match-location">{match.location}</div>
                       )}
                     </div>
-                    <div className="match-teams">
-                      <span className={`home-team ${match.homeTeam.toLowerCase() === teamName?.toLowerCase() ? 'our-team' : ''}`}>
-                        {match.homeTeam}
-                      </span>
-                      <span className="match-result">{match.result}</span>
-                      <span className={`away-team ${match.awayTeam.toLowerCase() === teamName?.toLowerCase() ? 'our-team' : ''}`}>
-                        {match.awayTeam}
-                      </span>
+                  ))}
+                </>
+              )}
+
+              {/* Played */}
+              {playedMatches.length > 0 && (
+                <>
+                  <h3 className="matches-section-title">Spillede</h3>
+                  {playedMatches.map(match => (
+                    <div 
+                      key={match.id} 
+                      className={`match-item played ${match.involvesCurrentTeam ? 'our-match' : ''}`}
+                    >
+                      <div className="match-header">
+                        <span className="match-round">R{match.round}</span>
+                        <span className="match-date">{match.date}</span>
+                        {isFormand && (
+                          <button className="delete-btn-small" onClick={() => deleteMatch(match.id)}>×</button>
+                        )}
+                      </div>
+                      <div className="match-teams">
+                        <span className={`home-team ${match.homeTeam.toLowerCase() === teamName?.toLowerCase() ? 'our-team' : ''}`}>
+                          {match.homeTeam}
+                        </span>
+                        <span className="match-result">{match.result}</span>
+                        <span className={`away-team ${match.awayTeam.toLowerCase() === teamName?.toLowerCase() ? 'our-team' : ''}`}>
+                          {match.awayTeam}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </>
-            )}
-          </div>
-        )}
+                  ))}
+                </>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
