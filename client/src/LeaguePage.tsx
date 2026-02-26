@@ -379,92 +379,84 @@ export default function LeaguePage() {
 
   // Add match modal - simplified
   if (showAddMatch) {
+    // Get team names from standings for dropdown
+    const teamOptions = leagueData?.standings.map(s => s.name) || [];
+    
     return (
-      <div className="league-page">
-        <div className="match-form-overlay">
-          <div className="match-form-card">
-            <button className="close-btn" onClick={() => setShowAddMatch(false)}>×</button>
-            
-            <h2>📅 Ny kamp</h2>
-            
-            {error && <div className="error-banner">{error}</div>}
+      <div className="match-form-overlay" onClick={(e) => e.target === e.currentTarget && setShowAddMatch(false)}>
+        <div className="match-form-card">
+          <button className="close-btn" onClick={() => setShowAddMatch(false)}>×</button>
+          
+          <h2>📅 Ny kamp</h2>
+          
+          {error && <div className="error-banner">{error}</div>}
 
-            {/* Teams */}
-            <div className="match-form-teams">
-              <input
-                className="team-input home"
-                value={matchForm.homeTeam}
-                onChange={e => setMatchForm({...matchForm, homeTeam: e.target.value})}
-                placeholder="Hjemmehold"
-              />
-              <span className="vs-badge">VS</span>
-              <input
-                className="team-input away"
-                value={matchForm.awayTeam}
-                onChange={e => setMatchForm({...matchForm, awayTeam: e.target.value})}
-                placeholder="Udehold"
-              />
-            </div>
-
-            {/* When */}
-            <div className="match-form-when">
-              <div className="when-item">
-                <span className="when-icon">📆</span>
-                <input
-                  type="date"
-                  value={matchForm.date}
-                  onChange={e => setMatchForm({...matchForm, date: e.target.value})}
-                />
-              </div>
-              <div className="when-item">
-                <span className="when-icon">🕐</span>
-                <input
-                  type="time"
-                  value={matchForm.time}
-                  onChange={e => setMatchForm({...matchForm, time: e.target.value})}
-                />
-              </div>
-            </div>
-
-            {/* Where */}
-            <div className="match-form-where">
-              <span className="where-icon">📍</span>
-              <input
-                value={matchForm.location}
-                onChange={e => setMatchForm({...matchForm, location: e.target.value})}
-                placeholder="Lokation (valgfri)"
-              />
-            </div>
-
-            {/* Round & Result (optional) */}
-            <div className="match-form-extras">
-              <div className="extra-item">
-                <label>Runde</label>
-                <input
-                  type="number"
-                  value={matchForm.round}
-                  onChange={e => setMatchForm({...matchForm, round: parseInt(e.target.value) || 1})}
-                  min="1"
-                />
-              </div>
-              <div className="extra-item">
-                <label>Resultat</label>
-                <input
-                  value={matchForm.result}
-                  onChange={e => setMatchForm({...matchForm, result: e.target.value})}
-                  placeholder="3-0"
-                />
-              </div>
-            </div>
-
-            <button 
-              className="primary full-width" 
-              onClick={addMatch} 
-              disabled={saving || !matchForm.homeTeam || !matchForm.awayTeam}
+          {/* Teams - dropdowns */}
+          <div className="match-form-teams">
+            <select
+              className="team-select home"
+              value={matchForm.homeTeam}
+              onChange={e => setMatchForm({...matchForm, homeTeam: e.target.value})}
             >
-              {saving ? 'Gemmer...' : '✓ Tilføj kamp'}
-            </button>
+              <option value="">Hjemmehold</option>
+              {teamOptions.map(team => (
+                <option key={team} value={team}>{team}</option>
+              ))}
+            </select>
+            <span className="vs-badge">VS</span>
+            <select
+              className="team-select away"
+              value={matchForm.awayTeam}
+              onChange={e => setMatchForm({...matchForm, awayTeam: e.target.value})}
+            >
+              <option value="">Udehold</option>
+              {teamOptions.map(team => (
+                <option key={team} value={team}>{team}</option>
+              ))}
+            </select>
           </div>
+
+          {/* When - cleaner */}
+          <div className="match-form-datetime">
+            <input
+              type="date"
+              className="date-input"
+              value={matchForm.date}
+              onChange={e => setMatchForm({...matchForm, date: e.target.value})}
+            />
+            <input
+              type="time"
+              className="time-input"
+              value={matchForm.time}
+              onChange={e => setMatchForm({...matchForm, time: e.target.value})}
+            />
+          </div>
+
+          {/* Where */}
+          <div className="match-form-location">
+            <input
+              value={matchForm.location}
+              onChange={e => setMatchForm({...matchForm, location: e.target.value})}
+              placeholder="📍 Lokation (valgfri)"
+            />
+          </div>
+
+          {/* Result only */}
+          <div className="match-form-result">
+            <input
+              value={matchForm.result}
+              onChange={e => setMatchForm({...matchForm, result: e.target.value})}
+              placeholder="Resultat (tom = kommende kamp)"
+            />
+          </div>
+
+          <button 
+            className="primary full-width" 
+            onClick={addMatch} 
+            disabled={saving || !matchForm.homeTeam || !matchForm.awayTeam}
+          >
+            {saving ? 'Gemmer...' : '✓ Tilføj kamp'}
+          </button>
         </div>
       </div>
     );

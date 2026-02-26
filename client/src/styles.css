@@ -2781,7 +2781,7 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
 .match-form-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.85);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2793,17 +2793,17 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
   background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 20px;
-  padding: 32px;
+  padding: 28px;
   width: 100%;
-  max-width: 420px;
+  max-width: 380px;
   position: relative;
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
 }
 
 .match-form-card .close-btn {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  top: 12px;
+  right: 12px;
   background: rgba(255, 255, 255, 0.1);
   border: none;
   width: 32px;
@@ -2824,178 +2824,151 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
 }
 
 .match-form-card h2 {
-  margin: 0 0 28px;
-  font-size: 22px;
+  margin: 0 0 24px;
+  font-size: 20px;
   text-align: center;
   color: #fff;
 }
 
-/* Teams input - VS style */
+/* Teams select - VS style */
 .match-form-teams {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 24px;
+  gap: 10px;
+  margin-bottom: 20px;
 }
 
-.match-form-teams .team-input {
+.match-form-teams .team-select {
   flex: 1;
-  background: rgba(0, 0, 0, 0.3);
-  border: 2px solid rgba(255, 255, 255, 0.15);
-  border-radius: 12px;
-  padding: 14px 16px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  padding: 12px 10px;
   color: #fff;
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 500;
-  text-align: center;
+  cursor: pointer;
   transition: all 0.2s;
+  appearance: none;
+  text-align: center;
+  text-align-last: center;
 }
 
-.match-form-teams .team-input:focus {
+.match-form-teams .team-select:focus {
   outline: none;
   border-color: var(--ball-yellow);
-  background: rgba(0, 0, 0, 0.4);
 }
 
-.match-form-teams .team-input.home {
-  text-align: right;
-}
-
-.match-form-teams .team-input.away {
-  text-align: left;
+.match-form-teams .team-select option {
+  background: #1e293b;
+  color: #fff;
 }
 
 .match-form-teams .vs-badge {
   background: linear-gradient(135deg, var(--court-green) 0%, #0d9488 100%);
   color: white;
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-size: 12px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 11px;
   font-weight: 700;
   flex-shrink: 0;
 }
 
-/* When section */
-.match-form-when {
+/* DateTime section */
+.match-form-datetime {
   display: flex;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.match-form-when .when-item {
-  flex: 1;
-  display: flex;
-  align-items: center;
   gap: 10px;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 12px 14px;
+  margin-bottom: 12px;
 }
 
-.match-form-when .when-icon {
-  font-size: 18px;
-}
-
-.match-form-when input {
+.match-form-datetime input {
   flex: 1;
-  background: transparent;
-  border: none;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 12px 14px;
   color: #fff;
   font-size: 14px;
 }
 
-.match-form-when input:focus {
+.match-form-datetime input:focus {
   outline: none;
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
-/* Where section */
-.match-form-where {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
+/* Location */
+.match-form-location {
+  margin-bottom: 12px;
+}
+
+.match-form-location input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
   padding: 12px 14px;
+  color: #fff;
+  font-size: 14px;
+}
+
+.match-form-location input:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.match-form-location input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Result */
+.match-form-result {
   margin-bottom: 20px;
 }
 
-.match-form-where .where-icon {
-  font-size: 18px;
-}
-
-.match-form-where input {
-  flex: 1;
-  background: transparent;
-  border: none;
-  color: #fff;
-  font-size: 14px;
-}
-
-.match-form-where input:focus {
-  outline: none;
-}
-
-/* Extras (round & result) */
-.match-form-extras {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 24px;
-}
-
-.match-form-extras .extra-item {
-  flex: 1;
-}
-
-.match-form-extras label {
-  display: block;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
-  margin-bottom: 6px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.match-form-extras input {
+.match-form-result input {
   width: 100%;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 12px 14px;
   color: #fff;
   font-size: 14px;
   text-align: center;
 }
 
-.match-form-extras input:focus {
+.match-form-result input:focus {
   outline: none;
   border-color: rgba(255, 255, 255, 0.3);
+}
+
+.match-form-result input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 13px;
 }
 
 /* Full width button */
 button.full-width {
   width: 100%;
-  padding: 16px;
-  font-size: 16px;
+  padding: 14px;
+  font-size: 15px;
   font-weight: 600;
-  border-radius: 12px;
+  border-radius: 10px;
 }
 
 @media (max-width: 480px) {
   .match-form-card {
-    padding: 24px;
+    padding: 20px;
   }
   
   .match-form-teams {
     flex-direction: column;
   }
   
-  .match-form-teams .team-input {
-    text-align: center !important;
+  .match-form-teams .team-select {
+    width: 100%;
   }
   
   .match-form-teams .vs-badge {
-    padding: 6px 20px;
+    padding: 6px 24px;
   }
 }
