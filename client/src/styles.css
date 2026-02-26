@@ -2391,8 +2391,8 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
 .match-round {
   font-size: 11px;
   font-weight: 700;
-  color: var(--court-blue);
-  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+  background: rgba(59, 130, 246, 0.3);
   padding: 5px 12px;
   border-radius: 20px;
   text-transform: uppercase;
@@ -2401,7 +2401,7 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
 
 .match-date {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .match-teams {
@@ -2451,7 +2451,7 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
 .match-location {
   margin-top: 12px;
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.7);
   text-align: center;
 }
 
@@ -2528,18 +2528,19 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
   gap: 8px;
   margin-bottom: 20px;
   padding: 12px 20px;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.1) 100%);
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(59, 130, 246, 0.2) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.5);
   border-radius: 10px;
-  color: var(--court-blue);
+  color: #60a5fa;
   text-decoration: none;
-  font-weight: 500;
+  font-weight: 600;
   transition: all 0.2s;
 }
 
 .rankedin-link:hover {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(59, 130, 246, 0.2) 100%);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.4) 0%, rgba(59, 130, 246, 0.3) 100%);
   transform: translateY(-1px);
+  color: #93c5fd;
 }
 
 .small-btn {
@@ -2613,10 +2614,10 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
 .matches-section-title {
   font-size: 13px;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.8);
   margin: 24px 0 12px;
   padding-bottom: 8px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }

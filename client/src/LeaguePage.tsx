@@ -525,8 +525,7 @@ export default function LeaguePage() {
   return (
     <div className="league-page">
       <div className="page-header">
-        <h1>🏆 Liga</h1>
-        <p>{leagueData.poolName || 'Din liga'}</p>
+        <h1>🏆 {leagueData.poolName || 'Liga'}</h1>
       </div>
 
       {isFormand && (
