@@ -458,6 +458,17 @@ export default function LeaguePage() {
                 </select>
               </div>
 
+              <div className="match-form-round">
+                <input
+                  type="number"
+                  min="1"
+                  className="round-input"
+                  value={matchForm.round}
+                  onChange={e => setMatchForm({...matchForm, round: Number(e.target.value)})}
+                  placeholder="Runde"
+                />
+              </div>
+
               <div className="match-form-datetime">
                 <input
                   type="date"
@@ -532,6 +543,17 @@ export default function LeaguePage() {
                     <option key={team} value={team}>{team}</option>
                   ))}
                 </select>
+              </div>
+
+              <div className="match-form-round">
+                <input
+                  type="number"
+                  min="1"
+                  className="round-input"
+                  value={editingMatch.round}
+                  onChange={e => setEditingMatch({...editingMatch, round: Number(e.target.value)})}
+                  placeholder="Runde"
+                />
               </div>
 
               <div className="match-form-datetime">
