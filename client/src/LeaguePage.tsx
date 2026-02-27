@@ -458,27 +458,26 @@ export default function LeaguePage() {
                 </select>
               </div>
 
-              <div className="match-form-round">
+              <div className="match-form-row-group">
+                <label className="round-label-inline" htmlFor="edit-match-round">Runde</label>
                 <input
+                  id="edit-match-round"
                   type="number"
                   min="1"
-                  className="round-input"
+                  className="round-input-inline"
                   value={matchForm.round}
                   onChange={e => setMatchForm({...matchForm, round: Number(e.target.value)})}
                   placeholder="Runde"
                 />
-              </div>
-
-              <div className="match-form-datetime">
                 <input
                   type="date"
-                  className="date-input"
+                  className="date-input-inline"
                   value={matchForm.date}
                   onChange={e => setMatchForm({...matchForm, date: e.target.value})}
                 />
                 <input
                   type="time"
-                  className="time-input"
+                  className="time-input-inline"
                   value={matchForm.time}
                   onChange={e => setMatchForm({...matchForm, time: e.target.value})}
                 />
@@ -545,27 +544,26 @@ export default function LeaguePage() {
                 </select>
               </div>
 
-              <div className="match-form-round">
+              <div className="match-form-row-group">
+                <label className="round-label-inline" htmlFor="edit-match-round">Runde</label>
                 <input
+                  id="edit-match-round"
                   type="number"
                   min="1"
-                  className="round-input"
+                  className="round-input-inline"
                   value={editingMatch.round}
                   onChange={e => setEditingMatch({...editingMatch, round: Number(e.target.value)})}
                   placeholder="Runde"
                 />
-              </div>
-
-              <div className="match-form-datetime">
                 <input
                   type="date"
-                  className="date-input"
+                  className="date-input-inline"
                   value={editingMatch.date}
                   onChange={e => setEditingMatch({...editingMatch, date: e.target.value})}
                 />
                 <input
                   type="time"
-                  className="time-input"
+                  className="time-input-inline"
                   value={editingMatch.time}
                   onChange={e => setEditingMatch({...editingMatch, time: e.target.value})}
                 />

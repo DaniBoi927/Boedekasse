@@ -2901,25 +2901,58 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
 }
 
 /* DateTime section */
-.match-form-datetime {
+.match-form-row-group {
   display: flex;
-  gap: 10px;
-  margin-bottom: 12px;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
 }
-
-.match-form-datetime input {
-  flex: 1;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 10px;
-  padding: 12px 14px;
+.round-label-inline {
+  font-size: 15px;
+  color: #93c5fd;
+  margin-right: 4px;
+  min-width: 54px;
+}
+.round-input-inline,
+.date-input-inline,
+.time-input-inline {
+  background: #101726;
   color: #fff;
-  font-size: 14px;
-}
-
-.match-form-datetime input:focus {
+  border: none;
+  border-radius: 14px;
+  font-size: 17px;
+  padding: 12px 18px;
+  height: 48px;
+  box-sizing: border-box;
+  font-weight: 600;
   outline: none;
-  border-color: rgba(255, 255, 255, 0.3);
+  transition: box-shadow 0.2s;
+  box-shadow: 0 2px 8px 0 #0002;
+  width: 120px;
+  min-width: 0;
+}
+.round-input-inline {
+  width: 80px;
+}
+.date-input-inline,
+.time-input-inline {
+  width: 120px;
+}
+.round-input-inline:focus,
+.date-input-inline:focus,
+.time-input-inline:focus {
+  box-shadow: 0 0 0 2px #93c5fd;
+}
+.date-input-inline::-webkit-calendar-picker-indicator,
+.time-input-inline::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(2);
+  opacity: 1;
+}
+.date-input-inline::-webkit-input-placeholder,
+.time-input-inline::-webkit-input-placeholder {
+  color: #fff;
+  opacity: 0.7;
 }
 
 /* Location */
