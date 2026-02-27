@@ -2372,6 +2372,32 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
   border-color: rgba(255, 255, 255, 0.12);
 }
 
+.match-item.clickable {
+  cursor: pointer;
+}
+
+.match-item.clickable:hover {
+  border-color: rgba(255, 204, 0, 0.3);
+  transform: translateY(-1px);
+}
+
+.add-match-btn {
+  padding: 6px 14px;
+  font-size: 13px;
+  background: linear-gradient(135deg, rgba(255, 204, 0, 0.2) 0%, rgba(255, 204, 0, 0.1) 100%);
+  border: 1px solid rgba(255, 204, 0, 0.3);
+  border-radius: 8px;
+  color: #ffcc00;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.add-match-btn:hover {
+  background: linear-gradient(135deg, rgba(255, 204, 0, 0.3) 0%, rgba(255, 204, 0, 0.2) 100%);
+  transform: translateY(-1px);
+}
+
 .match-item.our-match {
   border-color: rgba(255, 204, 0, 0.4);
   background: rgba(255, 204, 0, 0.08);

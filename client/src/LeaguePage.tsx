@@ -40,6 +40,7 @@ export default function LeaguePage() {
   const [error, setError] = useState<string | null>(null);
   const [showSetup, setShowSetup] = useState(false);
   const [showAddMatch, setShowAddMatch] = useState(false);
+  const [editingMatch, setEditingMatch] = useState<Match | null>(null);
   
   // Setup form
   const [rankedinUrl, setRankedinUrl] = useState('');
@@ -300,6 +301,46 @@ export default function LeaguePage() {
     }
   }
 
+  async function updateMatch() {
+    if (!currentTeam || !editingMatch) return;
+    setSaving(true);
+    try {
+      // Delete and recreate with updated data
+      await fetch(`/api/teams/${currentTeam.id}/league/match/${editingMatch.id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const res = await fetch(`/api/teams/${currentTeam.id}/league/match`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          round: editingMatch.round,
+          date: editingMatch.date,
+          time: editingMatch.time,
+          homeTeam: editingMatch.homeTeam,
+          awayTeam: editingMatch.awayTeam,
+          result: editingMatch.result || '',
+          location: editingMatch.location
+        })
+      });
+      if (!res.ok) throw new Error('Kunne ikke opdatere');
+      setEditingMatch(null);
+      await loadLeagueData();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function startEditMatch(match: Match) {
+    setEditingMatch({...match});
+  }
+
   if (!currentTeam) {
     return (
       <div className="league-page">
@@ -377,90 +418,166 @@ export default function LeaguePage() {
     );
   }
 
-  // Add match modal - simplified
-  if (showAddMatch) {
-    // Get team names from standings for dropdown
+  // Helper to render modals
+  const renderMatchModals = () => {
     const teamOptions = leagueData?.standings.map(s => s.name) || [];
     
     return (
-      <div className="match-form-overlay" onClick={(e) => e.target === e.currentTarget && setShowAddMatch(false)}>
-        <div className="match-form-card">
-          <button className="close-btn" onClick={() => setShowAddMatch(false)}>×</button>
-          
-          <h2>📅 Ny kamp</h2>
-          
-          {error && <div className="error-banner">{error}</div>}
+      <>
+        {/* Add match modal */}
+        {showAddMatch && (
+          <div className="match-form-overlay" onClick={(e) => e.target === e.currentTarget && setShowAddMatch(false)}>
+            <div className="match-form-card">
+              <button className="close-btn" onClick={() => setShowAddMatch(false)}>×</button>
+              
+              <h2>📅 Ny kamp</h2>
+              
+              {error && <div className="error-banner">{error}</div>}
 
-          {/* Teams - dropdowns */}
-          <div className="match-form-teams">
-            <select
-              className="team-select home"
-              value={matchForm.homeTeam}
-              onChange={e => setMatchForm({...matchForm, homeTeam: e.target.value})}
-            >
-              <option value="">Hjemmehold</option>
-              {teamOptions.map(team => (
-                <option key={team} value={team}>{team}</option>
-              ))}
-            </select>
-            <span className="vs-badge">VS</span>
-            <select
-              className="team-select away"
-              value={matchForm.awayTeam}
-              onChange={e => setMatchForm({...matchForm, awayTeam: e.target.value})}
-            >
-              <option value="">Udehold</option>
-              {teamOptions.map(team => (
-                <option key={team} value={team}>{team}</option>
-              ))}
-            </select>
+              <div className="match-form-teams">
+                <select
+                  className="team-select home"
+                  value={matchForm.homeTeam}
+                  onChange={e => setMatchForm({...matchForm, homeTeam: e.target.value})}
+                >
+                  <option value="">Hjemmehold</option>
+                  {teamOptions.map(team => (
+                    <option key={team} value={team}>{team}</option>
+                  ))}
+                </select>
+                <span className="vs-badge">VS</span>
+                <select
+                  className="team-select away"
+                  value={matchForm.awayTeam}
+                  onChange={e => setMatchForm({...matchForm, awayTeam: e.target.value})}
+                >
+                  <option value="">Udehold</option>
+                  {teamOptions.map(team => (
+                    <option key={team} value={team}>{team}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="match-form-datetime">
+                <input
+                  type="date"
+                  className="date-input"
+                  value={matchForm.date}
+                  onChange={e => setMatchForm({...matchForm, date: e.target.value})}
+                />
+                <input
+                  type="time"
+                  className="time-input"
+                  value={matchForm.time}
+                  onChange={e => setMatchForm({...matchForm, time: e.target.value})}
+                />
+              </div>
+
+              <div className="match-form-location">
+                <input
+                  value={matchForm.location}
+                  onChange={e => setMatchForm({...matchForm, location: e.target.value})}
+                  placeholder="📍 Lokation (valgfri)"
+                />
+              </div>
+
+              <div className="match-form-result">
+                <input
+                  value={matchForm.result}
+                  onChange={e => setMatchForm({...matchForm, result: e.target.value})}
+                  placeholder="Resultat (tom = kommende kamp)"
+                />
+              </div>
+
+              <button 
+                className="primary full-width" 
+                onClick={addMatch} 
+                disabled={saving || !matchForm.homeTeam || !matchForm.awayTeam}
+              >
+                {saving ? 'Gemmer...' : '✓ Tilføj kamp'}
+              </button>
+            </div>
           </div>
+        )}
 
-          {/* When - cleaner */}
-          <div className="match-form-datetime">
-            <input
-              type="date"
-              className="date-input"
-              value={matchForm.date}
-              onChange={e => setMatchForm({...matchForm, date: e.target.value})}
-            />
-            <input
-              type="time"
-              className="time-input"
-              value={matchForm.time}
-              onChange={e => setMatchForm({...matchForm, time: e.target.value})}
-            />
+        {/* Edit match modal */}
+        {editingMatch && (
+          <div className="match-form-overlay" onClick={(e) => e.target === e.currentTarget && setEditingMatch(null)}>
+            <div className="match-form-card">
+              <button className="close-btn" onClick={() => setEditingMatch(null)}>×</button>
+              
+              <h2>✏️ Rediger kamp</h2>
+              
+              {error && <div className="error-banner">{error}</div>}
+
+              <div className="match-form-teams">
+                <select
+                  className="team-select home"
+                  value={editingMatch.homeTeam}
+                  onChange={e => setEditingMatch({...editingMatch, homeTeam: e.target.value})}
+                >
+                  <option value="">Hjemmehold</option>
+                  {teamOptions.map(team => (
+                    <option key={team} value={team}>{team}</option>
+                  ))}
+                </select>
+                <span className="vs-badge">VS</span>
+                <select
+                  className="team-select away"
+                  value={editingMatch.awayTeam}
+                  onChange={e => setEditingMatch({...editingMatch, awayTeam: e.target.value})}
+                >
+                  <option value="">Udehold</option>
+                  {teamOptions.map(team => (
+                    <option key={team} value={team}>{team}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="match-form-datetime">
+                <input
+                  type="date"
+                  className="date-input"
+                  value={editingMatch.date}
+                  onChange={e => setEditingMatch({...editingMatch, date: e.target.value})}
+                />
+                <input
+                  type="time"
+                  className="time-input"
+                  value={editingMatch.time}
+                  onChange={e => setEditingMatch({...editingMatch, time: e.target.value})}
+                />
+              </div>
+
+              <div className="match-form-location">
+                <input
+                  value={editingMatch.location}
+                  onChange={e => setEditingMatch({...editingMatch, location: e.target.value})}
+                  placeholder="📍 Lokation (valgfri)"
+                />
+              </div>
+
+              <div className="match-form-result">
+                <input
+                  value={editingMatch.result || ''}
+                  onChange={e => setEditingMatch({...editingMatch, result: e.target.value})}
+                  placeholder="Resultat (tom = kommende kamp)"
+                />
+              </div>
+
+              <button 
+                className="primary full-width" 
+                onClick={updateMatch} 
+                disabled={saving || !editingMatch.homeTeam || !editingMatch.awayTeam}
+              >
+                {saving ? 'Gemmer...' : '✓ Gem ændringer'}
+              </button>
+            </div>
           </div>
-
-          {/* Where */}
-          <div className="match-form-location">
-            <input
-              value={matchForm.location}
-              onChange={e => setMatchForm({...matchForm, location: e.target.value})}
-              placeholder="📍 Lokation (valgfri)"
-            />
-          </div>
-
-          {/* Result only */}
-          <div className="match-form-result">
-            <input
-              value={matchForm.result}
-              onChange={e => setMatchForm({...matchForm, result: e.target.value})}
-              placeholder="Resultat (tom = kommende kamp)"
-            />
-          </div>
-
-          <button 
-            className="primary full-width" 
-            onClick={addMatch} 
-            disabled={saving || !matchForm.homeTeam || !matchForm.awayTeam}
-          >
-            {saving ? 'Gemmer...' : '✓ Tilføj kamp'}
-          </button>
-        </div>
-      </div>
+        )}
+      </>
     );
-  }
+  };
 
   // No league data yet
   if (!leagueData) {
@@ -659,11 +776,11 @@ export default function LeaguePage() {
           <div className="card-header-row">
             <h2>📅 Kampe</h2>
             {isFormand && (
-              <button className="small-btn" onClick={() => {
+              <button className="add-match-btn" onClick={() => {
                 setMatchForm({ round: (leagueData.matches.length || 0) + 1, date: '', time: '', homeTeam: '', awayTeam: '', result: '', location: '' });
                 setShowAddMatch(true);
               }}>
-                +
+                + Tilføj
               </button>
             )}
           </div>
@@ -681,13 +798,14 @@ export default function LeaguePage() {
                   {upcomingMatches.map(match => (
                     <div 
                       key={match.id} 
-                      className={`match-item ${match.involvesCurrentTeam ? 'our-match' : ''}`}
+                      className={`match-item ${match.involvesCurrentTeam ? 'our-match' : ''} ${isFormand ? 'clickable' : ''}`}
+                      onClick={() => isFormand && startEditMatch(match)}
                     >
                       <div className="match-header">
                         <span className="match-round">R{match.round}</span>
                         <span className="match-date">{match.date} {match.time && `${match.time}`}</span>
                         {isFormand && (
-                          <button className="delete-btn-small" onClick={() => deleteMatch(match.id)}>×</button>
+                          <button className="delete-btn-small" onClick={(e) => { e.stopPropagation(); deleteMatch(match.id); }}>×</button>
                         )}
                       </div>
                       <div className="match-teams">
@@ -714,13 +832,14 @@ export default function LeaguePage() {
                   {playedMatches.map(match => (
                     <div 
                       key={match.id} 
-                      className={`match-item played ${match.involvesCurrentTeam ? 'our-match' : ''}`}
+                      className={`match-item played ${match.involvesCurrentTeam ? 'our-match' : ''} ${isFormand ? 'clickable' : ''}`}
+                      onClick={() => isFormand && startEditMatch(match)}
                     >
                       <div className="match-header">
                         <span className="match-round">R{match.round}</span>
                         <span className="match-date">{match.date}</span>
                         {isFormand && (
-                          <button className="delete-btn-small" onClick={() => deleteMatch(match.id)}>×</button>
+                          <button className="delete-btn-small" onClick={(e) => { e.stopPropagation(); deleteMatch(match.id); }}>×</button>
                         )}
                       </div>
                       <div className="match-teams">
@@ -740,6 +859,9 @@ export default function LeaguePage() {
           )}
         </div>
       </div>
+      
+      {/* Modals */}
+      {renderMatchModals()}
     </div>
   );
 }
