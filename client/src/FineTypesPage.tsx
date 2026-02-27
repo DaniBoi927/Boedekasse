@@ -144,15 +144,15 @@ export default function FineTypesPage() {
       <div className="card add-fine-type-card">
         <h2>➕ Opret ny bødetype</h2>
         <form onSubmit={addFineType} className="add-fine-type-form-large">
-          <div className="form-row">
-            <div className="form-group">
-              <label>Årsag</label>
-              <input
-                placeholder="Fx 'Kom for sent', 'Glemte bold'..."
-                value={newReason}
-                onChange={e => setNewReason(e.target.value)}
-              />
-            </div>
+          <div className="form-group">
+            <label>Årsag</label>
+            <input
+              placeholder="Fx 'Kom for sent', 'Glemte bold'..."
+              value={newReason}
+              onChange={e => setNewReason(e.target.value)}
+            />
+          </div>
+          <div className="add-fine-type-row">
             <div className="form-group">
               <label>Beløb (kr)</label>
               <input

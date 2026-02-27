@@ -1442,8 +1442,8 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
 
 .add-fine-type-card {
   margin-bottom: 24px;
-  background: linear-gradient(135deg, rgba(204, 255, 0, 0.1), rgba(204, 255, 0, 0.05));
-  border: 2px solid var(--ball-yellow);
+  background: rgba(20, 45, 66, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .add-fine-type-form-large {
@@ -1451,6 +1451,12 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
 }
 
 .add-fine-type-form-large .form-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+}
+
+.add-fine-type-row {
   display: flex;
   gap: 16px;
   align-items: flex-end;
@@ -1488,6 +1494,13 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
 .add-fine-type-form-large button {
   padding: 14px 28px !important;
   white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .add-fine-type-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 
 .empty-fine-types {
@@ -2902,11 +2915,11 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
 
 /* DateTime section */
 .match-form-row-group {
-  display: flex;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: auto 1fr 1fr 1fr;
+  column-gap: 12px;
   align-items: center;
   margin-bottom: 16px;
-  flex-wrap: wrap;
 }
 .round-label-inline {
   font-size: 15px;
@@ -2929,15 +2942,11 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
   outline: none;
   transition: box-shadow 0.2s;
   box-shadow: 0 2px 8px 0 #0002;
-  width: 120px;
+  width: 100%;
   min-width: 0;
 }
 .round-input-inline {
-  width: 80px;
-}
-.date-input-inline,
-.time-input-inline {
-  width: 120px;
+  max-width: 90px;
 }
 .round-input-inline:focus,
 .date-input-inline:focus,
