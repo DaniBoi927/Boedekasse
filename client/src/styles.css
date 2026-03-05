@@ -2427,6 +2427,13 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
   margin-bottom: 12px;
 }
 
+.match-datetime {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
 .match-round {
   font-size: 11px;
   font-weight: 700;
@@ -2440,7 +2447,14 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
 
 .match-date {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.85);
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.match-time {
+  font-size: 13px;
+  font-weight: 600;
+  color: #93c5fd;
 }
 
 .match-teams {
@@ -2730,6 +2744,36 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
 }
 
 /* Action buttons */
+.standing-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.move-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-right: 4px;
+}
+
+.move-btn {
+  background: transparent;
+  border: none;
+  padding: 2px 4px;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 12px;
+  line-height: 1;
+  border-radius: 3px;
+  transition: all 0.2s;
+}
+
+.move-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--ball-yellow);
+}
+
 .star-btn {
   background: transparent;
   border: none;

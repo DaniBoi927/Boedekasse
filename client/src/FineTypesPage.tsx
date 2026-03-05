@@ -142,7 +142,7 @@ export default function FineTypesPage() {
       {error && <div className="error-banner">{error}</div>}
 
       <div className="card add-fine-type-card">
-        <h2>➕ Opret ny bødetype</h2>
+        <h2>Opret ny bødetype</h2>
         <form onSubmit={addFineType} className="add-fine-type-form-large">
           <div className="form-group">
             <label>Årsag</label>
@@ -165,7 +165,7 @@ export default function FineTypesPage() {
               />
             </div>
             <button type="submit" className="primary" disabled={loading}>
-              + Tilføj bødetype
+              Tilføj bødetype
             </button>
           </div>
         </form>

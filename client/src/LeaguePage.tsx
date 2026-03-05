@@ -235,6 +235,58 @@ export default function LeaguePage() {
     }
   }
 
+  async function moveStanding(position: number, direction: 'up' | 'down') {
+    if (!currentTeam || !leagueData) return;
+    const index = leagueData.standings.findIndex(t => t.position === position);
+    if (index === -1) return;
+
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= leagueData.standings.length) return;
+
+    const current = leagueData.standings[index];
+    const target = leagueData.standings[targetIndex];
+
+    try {
+      setSaving(true);
+
+      // Remove both standings
+      await fetch(`/api/teams/${currentTeam.id}/league/standing/${current.position}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      await fetch(`/api/teams/${currentTeam.id}/league/standing/${target.position}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      // Recreate with swapped positions
+      await fetch(`/api/teams/${currentTeam.id}/league/standing`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ ...current, position: target.position })
+      });
+
+      await fetch(`/api/teams/${currentTeam.id}/league/standing`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ ...target, position: current.position })
+      });
+
+      await loadLeagueData();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function toggleCurrentTeam(position: number) {
     if (!currentTeam || !leagueData) return;
     const team = leagueData.standings.find(t => t.position === position);
@@ -700,7 +752,7 @@ export default function LeaguePage() {
                 </tr>
               </thead>
               <tbody>
-                {leagueData.standings.map(team => (
+            {leagueData.standings.map((team, index) => (
                   <tr key={team.position} className={team.isCurrentTeam ? 'current-team' : ''}>
                     <td className="pos">{team.position}.</td>
                     {renderCell(team, 'name', team.name, 'team')}
@@ -710,14 +762,36 @@ export default function LeaguePage() {
                     {renderCell(team, 'sets', team.sets, 'sets')}
                     {isFormand && (
                       <td className="actions">
-                        <button 
-                          className={`star-btn ${team.isCurrentTeam ? 'active' : ''}`} 
-                          onClick={() => toggleCurrentTeam(team.position)}
-                          title="Marker som vores hold"
-                        >
-                          ★
-                        </button>
-                        <button className="delete-btn-small" onClick={() => deleteStanding(team.position)}>🗑️</button>
+                        <div className="standing-actions">
+                          <div className="move-buttons">
+                            {index > 0 && (
+                              <button
+                                className="move-btn"
+                                onClick={() => moveStanding(team.position, 'up')}
+                                title="Flyt op"
+                              >
+                                ↑
+                              </button>
+                            )}
+                            {index < leagueData.standings.length - 1 && (
+                              <button
+                                className="move-btn"
+                                onClick={() => moveStanding(team.position, 'down')}
+                                title="Flyt ned"
+                              >
+                                ↓
+                              </button>
+                            )}
+                          </div>
+                          <button 
+                            className={`star-btn ${team.isCurrentTeam ? 'active' : ''}`} 
+                            onClick={() => toggleCurrentTeam(team.position)}
+                            title="Marker som vores hold"
+                          >
+                            ★
+                          </button>
+                          <button className="delete-btn-small" onClick={() => deleteStanding(team.position)}>🗑️</button>
+                        </div>
                       </td>
                     )}
                   </tr>
@@ -823,7 +897,10 @@ export default function LeaguePage() {
                     >
                       <div className="match-header">
                         <span className="match-round">R{match.round}</span>
-                        <span className="match-date">{match.date} {match.time && `${match.time}`}</span>
+                        <div className="match-datetime">
+                          <span className="match-date">{match.date}</span>
+                          {match.time && <span className="match-time">{match.time}</span>}
+                        </div>
                         {isFormand && (
                           <button className="delete-btn-small" onClick={(e) => { e.stopPropagation(); deleteMatch(match.id); }}>×</button>
                         )}
@@ -857,7 +934,10 @@ export default function LeaguePage() {
                     >
                       <div className="match-header">
                         <span className="match-round">R{match.round}</span>
-                        <span className="match-date">{match.date}</span>
+                        <div className="match-datetime">
+                          <span className="match-date">{match.date}</span>
+                          {match.time && <span className="match-time">{match.time}</span>}
+                        </div>
                         {isFormand && (
                           <button className="delete-btn-small" onClick={(e) => { e.stopPropagation(); deleteMatch(match.id); }}>×</button>
                         )}
