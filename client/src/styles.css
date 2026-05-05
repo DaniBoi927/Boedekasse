@@ -711,10 +711,11 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
 /* Floating MobilePay FAB */
 .mobilepay-fab {
   position: fixed;
-  top: 90px;
-  right: 24px;
+  right: max(24px, env(safe-area-inset-right));
+  bottom: max(24px, env(safe-area-inset-bottom));
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 12px;
   padding: 18px 28px;
   background: linear-gradient(135deg, #5a31f4, #9b59b6);
@@ -724,10 +725,11 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
   text-decoration: none;
   border-radius: 50px;
   transition: all 0.3s ease;
+  will-change: transform;
   box-shadow: 
     0 8px 32px rgba(90, 49, 244, 0.5),
     0 0 0 4px rgba(255, 255, 255, 0.3);
-  z-index: 1000;
+  z-index: 2000;
   animation: mobilepay-pulse 2s ease-in-out infinite;
   border: 3px solid rgba(255, 255, 255, 0.4);
 }
@@ -767,8 +769,8 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
   .mobilepay-fab {
     padding: 14px 20px;
     font-size: 15px;
-    top: 16px;
-    right: 16px;
+    right: max(14px, env(safe-area-inset-right));
+    bottom: max(14px, env(safe-area-inset-bottom));
   }
   
   .mobilepay-fab .mp-icon {
