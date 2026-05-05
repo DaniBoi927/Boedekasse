@@ -59,6 +59,10 @@ export default function FinesPage() {
     return v.toLocaleString('da-DK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' kr';
   }
 
+  function paidAmount(t: Total) {
+    return Number(t.total) - Number(t.outstanding);
+  }
+
   async function load() {
     if (!currentTeam) return;
     try {
@@ -396,23 +400,27 @@ export default function FinesPage() {
                 </div>
                 <ul className="leaderboard">
                   {[...totals]
-                    .sort((a, b) => Number(b.outstanding) - Number(a.outstanding))
+                    .sort((a, b) => {
+                      const paidDiff = paidAmount(b) - paidAmount(a);
+                      if (paidDiff !== 0) return paidDiff;
+                      return a.payer.localeCompare(b.payer, 'da-DK');
+                    })
                     .map((t, idx) => (
                       <li key={t.payer} className={`leaderboard-item ${Number(t.outstanding) === 0 ? 'paid-up' : ''}`}>
                         <span className="rank">
-                          {idx === 0 && Number(t.outstanding) > 0 ? '🥇' : 
-                           idx === 1 && Number(t.outstanding) > 0 ? '🥈' : 
-                           idx === 2 && Number(t.outstanding) > 0 ? '🥉' : 
+                          {idx === 0 && paidAmount(t) > 0 ? '🥇' : 
+                           idx === 1 && paidAmount(t) > 0 ? '🥈' : 
+                           idx === 2 && paidAmount(t) > 0 ? '🥉' : 
                            `${idx + 1}.`}
                         </span>
                         <span className="name">{t.payer}</span>
                         <span className="stats">
-                          <span className={`outstanding ${Number(t.outstanding) > 0 ? 'owes' : 'clear'}`}>
-                            {Number(t.outstanding) > 0 
+	                          <span className={`outstanding ${Number(t.outstanding) > 0 ? 'owes' : 'clear'}`}>
+	                            {Number(t.outstanding) > 0 
                               ? formatCurrency(Number(t.outstanding))
                               : '✓ Betalt'}
                           </span>
-                          <span className="total-small">({formatCurrency(Number(t.total))} total)</span>
+                          <span className="total-small">({formatCurrency(paidAmount(t))} betalt)</span>
                         </span>
                       </li>
                     ))}
