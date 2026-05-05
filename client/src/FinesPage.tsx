@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth } from './AuthContext';
 import LuckyWheel from './LuckyWheel';
 
@@ -729,7 +730,7 @@ export default function FinesPage() {
       />
 
       {/* Floating MobilePay Button - only show if team has mobilepay_link */}
-      {currentTeam?.mobilepay_link && (
+      {currentTeam?.mobilepay_link && createPortal(
         <a 
           href={currentTeam.mobilepay_link} 
           target="_blank" 
@@ -738,7 +739,8 @@ export default function FinesPage() {
         >
           <span className="mp-icon">📱</span>
           <span className="mp-text">Betal med MobilePay</span>
-        </a>
+        </a>,
+        document.body
       )}
     </div>
   );
