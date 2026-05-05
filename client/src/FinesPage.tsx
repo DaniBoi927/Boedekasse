@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useAuth } from './AuthContext';
 import LuckyWheel from './LuckyWheel';
 
@@ -49,7 +49,10 @@ export default function FinesPage() {
   const [reason, setReason] = useState('');
   const [selectedFineType, setSelectedFineType] = useState<number | ''>('');
   const [loading, setLoading] = useState(false);
-  const [filter, setFilter] = useState<'all' | 'unpaid' | 'paid'>('all');
+  const [filter, setFilter] = useState<'all' | 'unpaid' | 'paid'>('unpaid');
+  const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState<'outstanding' | 'paid' | 'count' | 'latest' | 'name'>('outstanding');
+  const [expandedPlayers, setExpandedPlayers] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const [payModalFineId, setPayModalFineId] = useState<number | null>(null);
   const [payModalPayer, setPayModalPayer] = useState('');
@@ -232,11 +235,103 @@ export default function FinesPage() {
     }
   }
 
-  const displayed = fines.filter(f => {
-    if (filter === 'all') return true;
-    if (filter === 'paid') return !!f.paid;
-    return !f.paid;
-  });
+  const displayed = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    return fines.filter(f => {
+      if (filter === 'paid' && !f.paid) return false;
+      if (filter === 'unpaid' && f.paid) return false;
+      if (!query) return true;
+      return [
+        f.payer,
+        f.reason || '',
+        f.paid_by || '',
+        formatCurrency(Number(f.amount))
+      ].some(value => value.toLowerCase().includes(query));
+    });
+  }, [fines, filter, search]);
+
+  const fineGroups = useMemo(() => {
+    const grouped = new Map<string, {
+      payer: string;
+      fines: Fine[];
+      total: number;
+      outstanding: number;
+      paid: number;
+      paidCount: number;
+      unpaidCount: number;
+      latestTime: number;
+    }>();
+
+    for (const fine of displayed) {
+      const existing = grouped.get(fine.payer) || {
+        payer: fine.payer,
+        fines: [],
+        total: 0,
+        outstanding: 0,
+        paid: 0,
+        paidCount: 0,
+        unpaidCount: 0,
+        latestTime: 0
+      };
+      const amountValue = Number(fine.amount);
+      const fineTime = fine.created_at ? new Date(fine.created_at).getTime() : 0;
+      existing.fines.push(fine);
+      existing.total += amountValue;
+      existing.latestTime = Math.max(existing.latestTime, Number.isNaN(fineTime) ? 0 : fineTime);
+      if (fine.paid) {
+        existing.paid += amountValue;
+        existing.paidCount += 1;
+      } else {
+        existing.outstanding += amountValue;
+        existing.unpaidCount += 1;
+      }
+      grouped.set(fine.payer, existing);
+    }
+
+    return [...grouped.values()]
+      .map(group => ({
+        ...group,
+        fines: [...group.fines].sort((a, b) => {
+          if (a.paid !== b.paid) return a.paid ? 1 : -1;
+          const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
+          const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
+          return bTime - aTime;
+        })
+      }))
+      .sort((a, b) => {
+        if (sortBy === 'name') return a.payer.localeCompare(b.payer, 'da-DK');
+        if (sortBy === 'paid') return b.paid - a.paid || a.payer.localeCompare(b.payer, 'da-DK');
+        if (sortBy === 'count') return b.fines.length - a.fines.length || a.payer.localeCompare(b.payer, 'da-DK');
+        if (sortBy === 'latest') return b.latestTime - a.latestTime || a.payer.localeCompare(b.payer, 'da-DK');
+        return b.outstanding - a.outstanding || a.payer.localeCompare(b.payer, 'da-DK');
+      });
+  }, [displayed, sortBy]);
+
+  const displayedTotals = useMemo(() => {
+    return displayed.reduce(
+      (sum, fine) => {
+        const amountValue = Number(fine.amount);
+        sum.total += amountValue;
+        if (fine.paid) sum.paid += amountValue;
+        else sum.outstanding += amountValue;
+        return sum;
+      },
+      { total: 0, paid: 0, outstanding: 0 }
+    );
+  }, [displayed]);
+
+  function togglePlayer(player: string) {
+    setExpandedPlayers(current => {
+      const next = new Set(current);
+      if (next.has(player)) next.delete(player);
+      else next.add(player);
+      return next;
+    });
+  }
+
+  function setAllGroups(open: boolean) {
+    setExpandedPlayers(open ? new Set(fineGroups.map(group => group.payer)) : new Set());
+  }
 
   if (!currentTeam) {
     return (
@@ -415,8 +510,8 @@ export default function FinesPage() {
                         </span>
                         <span className="name">{t.payer}</span>
                         <span className="stats">
-	                          <span className={`outstanding ${Number(t.outstanding) > 0 ? 'owes' : 'clear'}`}>
-	                            {Number(t.outstanding) > 0 
+                          <span className={`outstanding ${Number(t.outstanding) > 0 ? 'owes' : 'clear'}`}>
+                            {Number(t.outstanding) > 0 
                               ? formatCurrency(Number(t.outstanding))
                               : '✓ Betalt'}
                           </span>
@@ -434,74 +529,133 @@ export default function FinesPage() {
           <div className="card">
             <div className="list-header">
               <h2>🏆 Bøder</h2>
-              <div className="filters">
-                <label>
-                  <input
-                    type="radio"
-                    name="filter"
-                    checked={filter === 'all'}
-                    onChange={() => setFilter('all')}
-                  />{' '}
-                  Alle
-                </label>
-                <label>
-                  <input
-                    type="radio"
-                    name="filter"
-                    checked={filter === 'unpaid'}
-                    onChange={() => setFilter('unpaid')}
-                  />{' '}
-                  Ubetalte
-                </label>
-                <label>
-                  <input
-                    type="radio"
-                    name="filter"
-                    checked={filter === 'paid'}
-                    onChange={() => setFilter('paid')}
-                  />{' '}
-                  Betalte
-                </label>
-              </div>
+              <div className="fine-count">{displayed.length} af {fines.length}</div>
             </div>
 
             {loading && fines.length === 0 ? (
               <div className="muted">Indlæser...</div>
             ) : (
-              <table className="fines">
-                <thead>
-                  <tr>
-                    <th>Spiller</th>
-                    <th>Beløb</th>
-                    <th>Årsag</th>
-                    <th>Betalt</th>
-                    {isFormand && <th></th>}
-                  </tr>
-                </thead>
-                <tbody>
-                  {displayed.map(f => (
-                    <tr key={f.id} className={f.paid ? 'paid' : ''}>
-                      <td>{f.payer}</td>
-                      <td>{formatCurrency(Number(f.amount))}</td>
-                      <td className="reason">{f.reason}</td>
-                      <td>{f.paid ? `Ja ${f.paid_by ? `(${f.paid_by})` : ''}` : 'Nej'}</td>
-                      {isFormand && (
-                        <td className="actions">
-                          {!f.paid && (
-                            <>
-                              <button onClick={() => openPayModal(f.id, f.payer)}>✓ Betalt</button>
-                              {!f.wheel_used && (
-                                <button className="wheel-btn" onClick={() => setWheelFine(f)}>🎰</button>
-                              )}
-                            </>
+              <>
+                <div className="fine-toolbar">
+                  <div className="fine-search-wrap">
+                    <span className="fine-search-icon">⌕</span>
+                    <input
+                      value={search}
+                      onChange={e => setSearch(e.target.value)}
+                      placeholder="Søg efter spiller eller årsag"
+                      className="fine-search"
+                    />
+                  </div>
+                  <select
+                    value={sortBy}
+                    onChange={e => setSortBy(e.target.value as typeof sortBy)}
+                    className="fine-sort"
+                  >
+                    <option value="outstanding">Mest ubetalt</option>
+                    <option value="paid">Mest betalt</option>
+                    <option value="count">Flest bøder</option>
+                    <option value="latest">Nyeste først</option>
+                    <option value="name">Navn A-Å</option>
+                  </select>
+                </div>
+
+                <div className="fine-filters" role="tablist" aria-label="Bødefilter">
+                  <button className={filter === 'unpaid' ? 'active' : ''} onClick={() => setFilter('unpaid')} type="button">
+                    Ubetalte
+                  </button>
+                  <button className={filter === 'all' ? 'active' : ''} onClick={() => setFilter('all')} type="button">
+                    Alle
+                  </button>
+                  <button className={filter === 'paid' ? 'active' : ''} onClick={() => setFilter('paid')} type="button">
+                    Betalte
+                  </button>
+                </div>
+
+                <div className="fine-summary-strip">
+                  <div>
+                    <span>Ubetalt</span>
+                    <strong>{formatCurrency(displayedTotals.outstanding)}</strong>
+                  </div>
+                  <div>
+                    <span>Betalt</span>
+                    <strong>{formatCurrency(displayedTotals.paid)}</strong>
+                  </div>
+                  <div>
+                    <span>Bøder</span>
+                    <strong>{displayed.length}</strong>
+                  </div>
+                </div>
+
+                <div className="group-actions">
+                  <button type="button" onClick={() => setAllGroups(true)}>Åbn alle</button>
+                  <button type="button" onClick={() => setAllGroups(false)}>Luk alle</button>
+                </div>
+
+                {fineGroups.length === 0 ? (
+                  <div className="muted fine-empty">
+                    Ingen bøder matcher filtrene.
+                  </div>
+                ) : (
+                  <div className="fine-groups">
+                    {fineGroups.map(group => {
+                      const expanded = expandedPlayers.has(group.payer);
+                      return (
+                        <div key={group.payer} className="fine-group">
+                          <button
+                            type="button"
+                            className="fine-group-summary"
+                            onClick={() => togglePlayer(group.payer)}
+                            aria-expanded={expanded}
+                          >
+                            <span className="group-chevron">{expanded ? '▾' : '▸'}</span>
+                            <span className="group-player">
+                              <strong>{group.payer}</strong>
+                              <span>{group.fines.length} bøde{group.fines.length === 1 ? '' : 'r'}</span>
+                            </span>
+                            <span className={`group-money ${group.outstanding > 0 ? 'owes' : 'clear'}`}>
+                              <small>Ubetalt</small>
+                              {group.outstanding > 0 ? formatCurrency(group.outstanding) : 'Betalt'}
+                            </span>
+                            <span className="group-money">
+                              <small>Betalt</small>
+                              {formatCurrency(group.paid)}
+                            </span>
+                          </button>
+
+                          {expanded && (
+                            <div className="fine-details">
+                              {group.fines.map(f => (
+                                <div key={f.id} className={`fine-detail ${f.paid ? 'paid' : ''}`}>
+                                  <div className="fine-detail-main">
+                                    <strong>{formatCurrency(Number(f.amount))}</strong>
+                                    <span>{f.reason || 'Ingen årsag'}</span>
+                                  </div>
+                                  <div className="fine-detail-meta">
+                                    {f.paid ? `Betalt${f.paid_by ? ` af ${f.paid_by}` : ''}` : 'Ubetalt'}
+                                  </div>
+                                  {isFormand && (
+                                    <div className="fine-detail-actions">
+                                      {!f.paid && (
+                                        <>
+                                          <button type="button" onClick={() => openPayModal(f.id, f.payer)}>Betalt</button>
+                                          {!f.wheel_used && (
+                                            <button type="button" className="wheel-btn" onClick={() => setWheelFine(f)}>🎰</button>
+                                          )}
+                                        </>
+                                      )}
+                                      <button type="button" className="danger compact" onClick={() => deleteFine(f.id)}>Slet</button>
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
                           )}
-                          <button className="danger" onClick={() => deleteFine(f.id)}>Slet</button>
-                        </td>
-                      )}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
             )}
 
             {fines.length === 0 && !loading && (

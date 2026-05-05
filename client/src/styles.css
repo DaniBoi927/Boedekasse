@@ -871,6 +871,300 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
   gap: 12px;
 }
 
+.fine-count {
+  color: rgba(255,255,255,0.65);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.fine-toolbar {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) 180px;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.fine-search-wrap {
+  position: relative;
+}
+
+.fine-search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ball-yellow);
+  font-size: 18px;
+  font-weight: 800;
+  pointer-events: none;
+}
+
+.fine-search,
+.fine-sort {
+  width: 100%;
+  min-height: 44px;
+  box-sizing: border-box;
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.09);
+  color: white;
+  font-size: 14px;
+}
+
+.fine-search {
+  padding: 11px 14px 11px 40px;
+}
+
+.fine-search::placeholder {
+  color: rgba(255,255,255,0.48);
+}
+
+.fine-sort {
+  padding: 11px 36px 11px 14px;
+  cursor: pointer;
+}
+
+.fine-sort option {
+  background: #1e3a5f;
+  color: white;
+}
+
+.fine-search:focus,
+.fine-sort:focus {
+  outline: none;
+  border-color: var(--ball-yellow);
+  box-shadow: 0 0 0 3px rgba(204, 255, 0, 0.14);
+}
+
+.fine-filters {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+  padding: 4px;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  background: rgba(0,0,0,0.12);
+}
+
+.fine-filters button {
+  min-height: 38px;
+  padding: 8px 10px;
+  border: none;
+  background: transparent;
+  color: rgba(255,255,255,0.7);
+  border-radius: 9px;
+  font-size: 14px;
+}
+
+.fine-filters button.active {
+  background: linear-gradient(135deg, var(--ball-yellow), var(--ball-yellow-dark));
+  color: #142d42;
+  box-shadow: 0 4px 14px rgba(204, 255, 0, 0.18);
+}
+
+.fine-summary-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.fine-summary-strip div {
+  padding: 12px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.06);
+}
+
+.fine-summary-strip span {
+  display: block;
+  margin-bottom: 5px;
+  color: rgba(255,255,255,0.58);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.fine-summary-strip strong {
+  color: white;
+  font-size: 18px;
+}
+
+.group-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.group-actions button {
+  padding: 7px 10px;
+  border-radius: 8px;
+  color: rgba(255,255,255,0.75);
+  font-size: 12px;
+}
+
+.fine-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.fine-group {
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.045);
+}
+
+.fine-group-summary {
+  display: grid;
+  grid-template-columns: 28px minmax(180px, 1fr) minmax(118px, auto) minmax(118px, auto);
+  align-items: center;
+  width: 100%;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 0;
+  border-radius: 0;
+  background: linear-gradient(90deg, rgba(45, 140, 60, 0.22), rgba(0, 102, 179, 0.12));
+  text-align: left;
+}
+
+.fine-group-summary:hover {
+  background: linear-gradient(90deg, rgba(45, 140, 60, 0.3), rgba(0, 102, 179, 0.18));
+  transform: none;
+}
+
+.group-chevron {
+  color: var(--ball-yellow);
+  font-size: 18px;
+  line-height: 1;
+}
+
+.group-player {
+  min-width: 0;
+}
+
+.group-player strong,
+.group-player span {
+  display: block;
+}
+
+.group-player strong {
+  overflow: hidden;
+  color: white;
+  font-size: 17px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.group-player span {
+  margin-top: 3px;
+  color: rgba(255,255,255,0.55);
+  font-size: 12px;
+}
+
+.group-money {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  color: white;
+  font-size: 16px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.group-money small {
+  margin-bottom: 3px;
+  color: rgba(255,255,255,0.52);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.group-money.owes {
+  color: #fbbf24;
+}
+
+.group-money.clear {
+  color: #86efac;
+}
+
+.fine-details {
+  background: rgba(10, 25, 41, 0.35);
+}
+
+.fine-detail {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) minmax(120px, auto) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px 12px 58px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.fine-detail.paid {
+  background: rgba(45, 140, 60, 0.14);
+}
+
+.fine-detail-main {
+  min-width: 0;
+}
+
+.fine-detail-main strong,
+.fine-detail-main span {
+  display: block;
+}
+
+.fine-detail-main strong {
+  margin-bottom: 3px;
+  color: var(--ball-yellow);
+  font-size: 15px;
+}
+
+.fine-detail-main span {
+  overflow: hidden;
+  color: rgba(255,255,255,0.86);
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fine-detail-meta {
+  color: rgba(255,255,255,0.65);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.fine-detail-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.fine-detail-actions button {
+  min-height: 34px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+button.danger.compact {
+  background: rgba(248, 113, 113, 0.12);
+  border-color: rgba(248, 113, 113, 0.28);
+  color: #fecaca;
+}
+
+.fine-empty {
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px dashed rgba(255,255,255,0.16);
+  border-radius: 12px;
+  text-align: center;
+}
+
 .filters label { 
   margin-left: 10px; 
   font-size: 13px; 
@@ -3065,6 +3359,39 @@ button.full-width {
   font-size: 15px;
   font-weight: 600;
   border-radius: 10px;
+}
+
+@media (max-width: 820px) {
+  .fine-toolbar,
+  .fine-group-summary,
+  .fine-detail {
+    grid-template-columns: 1fr;
+  }
+
+  .fine-group-summary {
+    gap: 8px;
+  }
+
+  .group-chevron {
+    display: none;
+  }
+
+  .group-money {
+    align-items: flex-start;
+  }
+
+  .fine-detail {
+    padding: 12px 14px;
+  }
+
+  .fine-detail-actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .fine-summary-strip {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 480px) {
