@@ -113,12 +113,23 @@ export default function FinesPage() {
     load();
   }, [currentTeam]);
 
+  useEffect(() => {
+    if (!selectedFineType) return;
+    const fineType = fineTypes.find(f => f.id === selectedFineType);
+    if (!fineType) return;
+    setReason(fineType.reason);
+    setAmount(String(fineType.amount));
+  }, [selectedFineType, fineTypes]);
+
   async function add(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     if (!payer.trim()) return setError('Spiller er påkrævet');
-    const n = Number(amount);
-    if (!amount || isNaN(n) || n <= 0) return setError('Indtast et gyldigt beløb');
+    const fineType = selectedFineType ? fineTypes.find(f => f.id === selectedFineType) : undefined;
+    const resolvedAmount = amount || (fineType ? String(fineType.amount) : '');
+    const resolvedReason = reason.trim() || fineType?.reason || '';
+    const n = Number(resolvedAmount);
+    if (!resolvedAmount || isNaN(n) || n <= 0) return setError('Indtast et gyldigt beløb');
     if (!currentTeam) return setError('Vælg et team først');
 
     try {
@@ -132,7 +143,7 @@ export default function FinesPage() {
         body: JSON.stringify({
           payer: payer.trim(),
           amount: n,
-          reason: reason.trim(),
+          reason: resolvedReason,
           team_id: currentTeam.id
         })
       });
@@ -142,6 +153,7 @@ export default function FinesPage() {
       setPayer('');
       setAmount('');
       setReason('');
+      setSelectedFineType('');
       await load();
     } catch (e: any) {
       console.error(e);
@@ -363,7 +375,10 @@ export default function FinesPage() {
                   <select
                     aria-label="payer"
                     value={payer}
-                    onChange={e => setPayer(e.target.value)}
+                    onChange={e => {
+                      setPayer(e.target.value);
+                      setError(null);
+                    }}
                     className="player-select"
                   >
                     <option value="">Vælg spiller...</option>
@@ -375,7 +390,10 @@ export default function FinesPage() {
                     aria-label="amount"
                     placeholder="Beløb (kr)"
                     value={amount}
-                    onChange={e => setAmount(e.target.value)}
+                    onChange={e => {
+                      setAmount(e.target.value);
+                      setError(null);
+                    }}
                     type="number"
                     step="0.01"
                     min="0"
@@ -386,6 +404,7 @@ export default function FinesPage() {
                   onChange={e => {
                     const id = e.target.value;
                     setSelectedFineType(id ? Number(id) : '');
+                    setError(null);
                     if (id) {
                       const ft = fineTypes.find(f => f.id === Number(id));
                       if (ft) {
@@ -410,6 +429,7 @@ export default function FinesPage() {
                   onChange={e => {
                     setReason(e.target.value);
                     setSelectedFineType('');
+                    setError(null);
                   }}
                   className="reason-input"
                 />
