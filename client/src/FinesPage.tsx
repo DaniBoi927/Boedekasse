@@ -394,7 +394,7 @@ export default function FinesPage() {
                     }}
                     className="player-select"
                   >
-                    <option value="">Vælg spiller...</option>
+                    <option value="">Vælg spiller</option>
                     {members.map(m => (
                       <option key={m.user_id} value={m.name}>{m.name}</option>
                     ))}
@@ -428,7 +428,7 @@ export default function FinesPage() {
                   }}
                   className="player-select full-width"
                 >
-                  <option value="">Vælg bødetype...</option>
+                  <option value="">Vælg bødetype</option>
                   {fineTypes.map(ft => (
                     <option key={ft.id} value={ft.id}>
                       {ft.reason} ({formatCurrency(ft.amount)})
@@ -437,7 +437,7 @@ export default function FinesPage() {
                 </select>
                 <input
                   aria-label="reason"
-                  placeholder="Eller skriv egen årsag..."
+                  placeholder="Skriv egen årsag"
                   value={reason}
                   onChange={e => {
                     setReason(e.target.value);
