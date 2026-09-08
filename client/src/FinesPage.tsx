@@ -548,7 +548,7 @@ export default function FinesPage() {
                           </span>
                           <span className={`owed-small ${Number(t.outstanding) > 0 ? 'owes' : 'clear'}`}>
                             {Number(t.outstanding) > 0
-                              ? `${formatCurrency(Number(t.outstanding))} skylder`
+                              ? `skylder ${formatCurrency(Number(t.outstanding))}`
                               : 'Intet skyldig'}
                           </span>
                         </span>
