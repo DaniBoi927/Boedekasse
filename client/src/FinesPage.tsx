@@ -517,26 +517,28 @@ export default function FinesPage() {
                 <ul className="leaderboard">
                   {[...totals]
                     .sort((a, b) => {
-                      const paidDiff = paidAmount(b) - paidAmount(a);
-                      if (paidDiff !== 0) return paidDiff;
+                      const totalDiff = Number(b.total) - Number(a.total);
+                      if (totalDiff !== 0) return totalDiff;
                       return a.payer.localeCompare(b.payer, 'da-DK');
                     })
                     .map((t, idx) => (
                       <li key={t.payer} className={`leaderboard-item ${Number(t.outstanding) === 0 ? 'paid-up' : ''}`}>
                         <span className="rank">
-                          {idx === 0 && paidAmount(t) > 0 ? '🥇' : 
-                           idx === 1 && paidAmount(t) > 0 ? '🥈' : 
-                           idx === 2 && paidAmount(t) > 0 ? '🥉' : 
+                          {idx === 0 && Number(t.total) > 0 ? '🥇' : 
+                           idx === 1 && Number(t.total) > 0 ? '🥈' : 
+                           idx === 2 && Number(t.total) > 0 ? '🥉' : 
                            `${idx + 1}.`}
                         </span>
                         <span className="name">{t.payer}</span>
                         <span className="stats">
-                          <span className={`outstanding ${Number(t.outstanding) > 0 ? 'owes' : 'clear'}`}>
-                            {Number(t.outstanding) > 0 
-                              ? formatCurrency(Number(t.outstanding))
-                              : '✓ Betalt'}
+                          <span className="paid-main">
+                            {formatCurrency(paidAmount(t))}
                           </span>
-                          <span className="total-small">({formatCurrency(paidAmount(t))} betalt)</span>
+                          <span className={`owed-small ${Number(t.outstanding) > 0 ? 'owes' : 'clear'}`}>
+                            {Number(t.outstanding) > 0
+                              ? `${formatCurrency(Number(t.outstanding))} skylder`
+                              : 'Intet skyldig'}
+                          </span>
                         </span>
                       </li>
                     ))}

@@ -801,7 +801,7 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
 }
 
 .leaderboard-item.paid-up {
-  opacity: 0.6;
+  opacity: 0.85;
 }
 
 .leaderboard-item .rank {
@@ -825,9 +825,14 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
   gap: 2px;
 }
 
-.leaderboard-item .outstanding {
+.leaderboard-item .outstanding,
+.leaderboard-item .paid-main {
   font-weight: 700;
   font-size: 15px;
+}
+
+.leaderboard-item .paid-main {
+  color: #86efac;
 }
 
 .leaderboard-item .outstanding.owes {
@@ -842,6 +847,19 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
 .leaderboard-item .total-small {
   font-size: 12px;
   color: rgba(255,255,255,0.5);
+}
+
+.leaderboard-item .owed-small {
+  font-size: 12px;
+  color: rgba(255,255,255,0.5);
+}
+
+.leaderboard-item .owed-small.owes {
+  color: rgba(251,191,36,0.75);
+}
+
+.leaderboard-item .owed-small.clear {
+  color: rgba(134,239,172,0.7);
 }
 
 /* Old totals (keep for compatibility) */
