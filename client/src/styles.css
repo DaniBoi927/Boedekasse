@@ -1400,14 +1400,28 @@ button.danger.compact {
 /* ==================== */
 .sidebar {
   width: 280px;
+  flex: 0 0 280px;
   background: linear-gradient(180deg, #1e3a5f 0%, #0d2137 100%);
   display: flex;
   flex-direction: column;
   box-shadow: 4px 0 20px rgba(0,0,0,0.2);
   z-index: 10;
+  transition: width 0.24s ease, flex-basis 0.24s ease, transform 0.24s ease, box-shadow 0.24s ease;
+  overflow: hidden;
+}
+
+.app-layout.sidebar-closed .sidebar {
+  width: 0;
+  flex-basis: 0;
+  transform: translateX(-100%);
+  box-shadow: none;
 }
 
 .sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   padding: 20px;
   border-bottom: 1px solid rgba(255,255,255,0.1);
 }
@@ -1416,6 +1430,45 @@ button.danger.compact {
   font-size: 20px;
   margin: 0;
   color: var(--ball-yellow);
+}
+
+.sidebar-close,
+.sidebar-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.1);
+  color: white;
+  cursor: pointer;
+}
+
+.sidebar-close {
+  display: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.sidebar-toggle {
+  flex: 0 0 auto;
+  min-width: 42px;
+  min-height: 42px;
+  padding: 0 12px;
+  border-radius: 10px;
+  font-size: 20px;
+}
+
+.sidebar-toggle:hover,
+.sidebar-close:hover {
+  background: rgba(255,255,255,0.16);
+  border-color: rgba(255,255,255,0.28);
+}
+
+.sidebar-backdrop {
+  display: none;
 }
 
 .sidebar-user {
@@ -2414,25 +2467,47 @@ button.danger.compact {
     overflow-y: visible;
   }
 
+  .sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    display: block;
+    background: rgba(0,0,0,0.48);
+    border: 0;
+    padding: 0;
+    z-index: 80;
+  }
+
   .sidebar {
-    width: 100%;
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: min(86vw, 340px);
+    max-width: 340px;
+    height: 100vh;
+    flex-basis: auto;
     max-height: none;
+    z-index: 90;
+    box-shadow: 12px 0 36px rgba(0,0,0,0.38);
+    transform: translateX(0);
+  }
+
+  .app-layout.sidebar-closed .sidebar {
+    width: min(86vw, 340px);
+    flex-basis: auto;
+    transform: translateX(-105%);
   }
 
   .sidebar-header {
-    padding: 14px 18px;
+    padding: 18px;
   }
 
   .sidebar-user {
-    padding: 12px 18px;
+    padding: 14px 18px;
   }
 
   .sidebar-nav {
-    flex: none;
-    padding: 10px 0 12px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
+    flex: 1;
+    padding: 16px 0;
+    overflow-y: auto;
   }
 
   .nav-section h3 {
@@ -2440,23 +2515,23 @@ button.danger.compact {
   }
 
   .team-list {
-    display: flex;
-    gap: 8px;
-    margin: 0 0 12px;
-    padding: 0 18px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    display: block;
+    margin: 0 0 16px;
+    padding: 0;
+    overflow-x: visible;
   }
 
   .team-list li {
-    flex: 0 0 auto;
+    display: block;
   }
 
   .team-item {
-    min-width: 180px;
-    max-width: 260px;
+    width: calc(100% - 24px);
+    min-width: 0;
+    max-width: none;
+    margin: 0 12px 8px;
     border-radius: 12px;
-    padding: 11px 14px;
+    padding: 13px 14px;
     background: rgba(255,255,255,0.08);
     border: 1px solid rgba(255,255,255,0.12);
   }
@@ -2474,11 +2549,15 @@ button.danger.compact {
   }
 
   .team-actions {
-    padding: 0 18px;
+    padding: 0 12px;
   }
 
   .sidebar-footer {
-    display: none;
+    display: block;
+  }
+
+  .sidebar-close {
+    display: inline-flex;
   }
 
   .page-nav {

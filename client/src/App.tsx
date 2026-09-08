@@ -12,6 +12,13 @@ type Page = 'fines' | 'fine-types' | 'team' | 'league';
 function AppContent() {
   const { user, loading, currentTeam } = useAuth();
   const [page, setPage] = useState<Page>('fines');
+  const [sidebarOpen, setSidebarOpen] = useState(() => (
+    typeof window === 'undefined' ? true : window.innerWidth > 900
+  ));
+
+  function closeSidebarOnMobile() {
+    if (window.innerWidth <= 900) setSidebarOpen(false);
+  }
 
   if (loading) {
     return (
@@ -27,10 +34,20 @@ function AppContent() {
   }
 
   return (
-    <div className="app-layout">
-      <Sidebar />
+    <div className={`app-layout ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
+      {sidebarOpen && <button className="sidebar-backdrop" type="button" aria-label="Luk menu" onClick={() => setSidebarOpen(false)} />}
+      <Sidebar onClose={() => setSidebarOpen(false)} onNavigate={closeSidebarOnMobile} />
       <main className="main-content">
         <nav className="page-nav">
+          <button
+            className="sidebar-toggle"
+            type="button"
+            aria-label={sidebarOpen ? 'Skjul menu' : 'Vis menu'}
+            aria-expanded={sidebarOpen}
+            onClick={() => setSidebarOpen(open => !open)}
+          >
+            ☰
+          </button>
           <button
             className={page === 'fines' ? 'active' : ''}
             onClick={() => setPage('fines')}

@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
 import { useAuth } from './AuthContext';
 
-export default function Sidebar() {
+type SidebarProps = {
+  onClose?: () => void;
+  onNavigate?: () => void;
+};
+
+export default function Sidebar({ onClose, onNavigate }: SidebarProps) {
   const { user, teams, currentTeam, setCurrentTeam, logout, loadTeams, token } = useAuth();
   const [showCreateTeam, setShowCreateTeam] = useState(false);
   const [showJoinTeam, setShowJoinTeam] = useState(false);
@@ -70,6 +75,9 @@ export default function Sidebar() {
     <aside className="sidebar">
       <div className="sidebar-header">
         <h1>🎾 Padel Bødekasse</h1>
+        <button className="sidebar-close" type="button" aria-label="Luk menu" onClick={onClose}>
+          ×
+        </button>
       </div>
 
       <div className="sidebar-user">
@@ -88,7 +96,10 @@ export default function Sidebar() {
               <li key={team.id}>
                 <button
                   className={`team-item ${currentTeam?.id === team.id ? 'active' : ''}`}
-                  onClick={() => setCurrentTeam(team)}
+                  onClick={() => {
+                    setCurrentTeam(team);
+                    onNavigate?.();
+                  }}
                 >
                   <span className="team-name">{team.name}</span>
                   {team.role === 'formand' && <span className="badge">Formand</span>}
