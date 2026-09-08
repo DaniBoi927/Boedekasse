@@ -708,28 +708,25 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
   color: rgba(255,255,255,0.6);
 }
 
-/* Floating MobilePay FAB */
+/* Header MobilePay button */
 .mobilepay-fab {
-  position: fixed;
-  top: max(16px, env(safe-area-inset-top));
-  right: max(24px, env(safe-area-inset-right));
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: 18px 28px;
+  flex: 0 0 auto;
+  gap: 10px;
+  padding: 12px 18px;
   background: linear-gradient(135deg, #5a31f4, #9b59b6);
   color: white;
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 700;
   text-decoration: none;
-  border-radius: 50px;
+  border-radius: 999px;
   transition: background 0.2s ease, box-shadow 0.2s ease;
   box-shadow: 
-    0 8px 32px rgba(90, 49, 244, 0.5),
-    0 0 0 4px rgba(255, 255, 255, 0.3);
-  z-index: 2000;
-  border: 3px solid rgba(255, 255, 255, 0.4);
+    0 6px 20px rgba(90, 49, 244, 0.35),
+    0 0 0 3px rgba(255, 255, 255, 0.22);
+  border: 2px solid rgba(255, 255, 255, 0.35);
 }
 
 .mobilepay-fab:hover {
@@ -740,7 +737,7 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
 }
 
 .mobilepay-fab .mp-icon {
-  font-size: 26px;
+  font-size: 20px;
 }
 
 .mobilepay-fab .mp-text {
@@ -750,11 +747,14 @@ button:disabled { opacity: 0.6; cursor: default; transform: none; }
 
 /* På mobil, gør FAB mindre */
 @media (max-width: 600px) {
+  .fines-page > .page-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
   .mobilepay-fab {
     padding: 14px 20px;
     font-size: 15px;
-    top: 16px;
-    right: max(14px, env(safe-area-inset-right));
   }
   
   .mobilepay-fab .mp-icon {
@@ -1710,6 +1710,13 @@ button.danger.compact {
 /* General page header styling (applies to all pages) */
 .page-header {
   margin-bottom: 24px;
+}
+
+.fines-page > .page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 .page-header h1 {

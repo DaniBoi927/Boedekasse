@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { createPortal } from 'react-dom';
 import { useAuth } from './AuthContext';
 import LuckyWheel from './LuckyWheel';
 
@@ -360,8 +359,21 @@ export default function FinesPage() {
   return (
     <div className="fines-page">
       <div className="page-header">
-        <h1>🏆 Bøder</h1>
-        <p>Oversigt over alle bøder for <span className="team-name">{currentTeam.name}</span></p>
+        <div>
+          <h1>🏆 Bøder</h1>
+          <p>Oversigt over alle bøder for <span className="team-name">{currentTeam.name}</span></p>
+        </div>
+        {currentTeam?.mobilepay_link && (
+          <a 
+            href={currentTeam.mobilepay_link} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="mobilepay-fab"
+          >
+            <span className="mp-icon">📱</span>
+            <span className="mp-text">Betal med MobilePay</span>
+          </a>
+        )}
       </div>
       <div className="fines-grid">
         <section className="left">
@@ -731,19 +743,6 @@ export default function FinesPage() {
         fineId={wheelFine?.id || 0}
       />
 
-      {/* Floating MobilePay Button - only show if team has mobilepay_link */}
-      {currentTeam?.mobilepay_link && createPortal(
-        <a 
-          href={currentTeam.mobilepay_link} 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="mobilepay-fab"
-        >
-          <span className="mp-icon">📱</span>
-          <span className="mp-text">Betal med MobilePay</span>
-        </a>,
-        document.body
-      )}
     </div>
   );
 }
