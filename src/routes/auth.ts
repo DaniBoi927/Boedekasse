@@ -94,7 +94,7 @@ router.post('/login', async (req, res) => {
     });
   } catch (err) {
     console.error('Login error:', err);
-    res.status(500).json({ error: 'Server fejl' });
+    res.status(500).json({ error: 'Vent et par minutter og prøv igen, så kommer du ind.' });
   }
 });
 

@@ -16,6 +16,8 @@ type Team = {
   mobilepay_link?: string;
 };
 
+const SERVER_WAKEUP_MESSAGE = 'Vent et par minutter og prøv igen, så kommer du ind.';
+
 type AuthContextType = {
   user: User | null;
   token: string | null;
@@ -101,17 +103,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function login(email: string, password: string) {
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error);
-    
-    localStorage.setItem('token', data.token);
-    setToken(data.token);
-    setUser(data.user);
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        const error = new Error(data.error === 'Server fejl' ? SERVER_WAKEUP_MESSAGE : data.error);
+        (error as Error & { fromServer?: boolean }).fromServer = true;
+        throw error;
+      }
+      
+      localStorage.setItem('token', data.token);
+      setToken(data.token);
+      setUser(data.user);
+    } catch (err: any) {
+      if (err.fromServer) {
+        throw err;
+      }
+
+      throw new Error(SERVER_WAKEUP_MESSAGE);
+    }
   }
 
   async function register(email: string, password: string, name: string) {
