@@ -233,6 +233,48 @@ router.put('/:id/members/:memberId/role', authMiddleware, async (req: any, res) 
   }
 });
 
+// Remove member from team (only formand can remove regular members)
+router.delete('/:id/members/:memberId', authMiddleware, async (req: any, res) => {
+  const { id, memberId } = req.params;
+  const userId = req.userId;
+
+  try {
+    const pool = await getPool();
+
+    const formandCheck = await pool.request()
+      .input('team_id', id)
+      .input('user_id', userId)
+      .query('SELECT role FROM team_members WHERE team_id = @team_id AND user_id = @user_id');
+
+    if (formandCheck.recordset.length === 0 || formandCheck.recordset[0].role !== 'formand') {
+      return res.status(403).json({ error: 'Kun formanden kan fjerne medlemmer' });
+    }
+
+    const memberCheck = await pool.request()
+      .input('id', memberId)
+      .input('team_id', id)
+      .query('SELECT id, role FROM team_members WHERE id = @id AND team_id = @team_id');
+
+    if (memberCheck.recordset.length === 0) {
+      return res.status(404).json({ error: 'Medlem ikke fundet' });
+    }
+
+    if (memberCheck.recordset[0].role === 'formand') {
+      return res.status(400).json({ error: 'Du kan ikke fjerne en formand. Fjern formand-rollen først.' });
+    }
+
+    await pool.request()
+      .input('id', memberId)
+      .input('team_id', id)
+      .query('DELETE FROM team_members WHERE id = @id AND team_id = @team_id');
+
+    res.json({ message: 'Medlem fjernet' });
+  } catch (err) {
+    console.error('Remove member error:', err);
+    res.status(500).json({ error: 'Server fejl' });
+  }
+});
+
 // Leave team
 router.delete('/:id/leave', authMiddleware, async (req: any, res) => {
   const { id } = req.params;
@@ -240,6 +282,15 @@ router.delete('/:id/leave', authMiddleware, async (req: any, res) => {
 
   try {
     const pool = await getPool();
+
+    const memberCheck = await pool.request()
+      .input('team_id', id)
+      .input('user_id', userId)
+      .query('SELECT role FROM team_members WHERE team_id = @team_id AND user_id = @user_id');
+
+    if (memberCheck.recordset.length === 0) {
+      return res.status(404).json({ error: 'Du er ikke medlem af dette team' });
+    }
 
     // Check if user is the only formand
     const formandCheck = await pool.request()

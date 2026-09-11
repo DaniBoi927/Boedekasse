@@ -78,11 +78,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (res.ok) {
         const teamsData = await res.json();
         setTeams(teamsData);
-        // Set first team as current if none selected
-        if (teamsData.length > 0 && !currentTeam) {
-          const savedTeamId = localStorage.getItem('currentTeamId');
-          const savedTeam = teamsData.find((t: Team) => t.id === Number(savedTeamId));
-          setCurrentTeam(savedTeam || teamsData[0]);
+        if (teamsData.length === 0) {
+          setCurrentTeam(null);
+          localStorage.removeItem('currentTeamId');
+          return;
+        }
+
+        const savedTeamId = localStorage.getItem('currentTeamId');
+        const selectedTeamId = currentTeam?.id ?? Number(savedTeamId);
+        const selectedTeam = teamsData.find((t: Team) => t.id === selectedTeamId);
+
+        if (selectedTeam) {
+          setCurrentTeam(selectedTeam);
+        } else {
+          setCurrentTeam(teamsData[0]);
+          localStorage.setItem('currentTeamId', String(teamsData[0].id));
         }
       }
     } catch (err) {

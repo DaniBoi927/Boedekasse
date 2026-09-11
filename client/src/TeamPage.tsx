@@ -129,6 +129,57 @@ export default function TeamPage() {
     }
   }
 
+  async function leaveTeam() {
+    if (!currentTeam) return;
+
+    const confirmed = window.confirm(
+      `Er du sikker på du vil forlade "${currentTeam.name}"?`
+    );
+
+    if (!confirmed) return;
+
+    setError('');
+    try {
+      const res = await fetch(`/api/teams/${currentTeam.id}/leave`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      setCurrentTeam(null);
+      localStorage.removeItem('currentTeamId');
+      await loadTeams();
+    } catch (err: any) {
+      setError(err.message);
+    }
+  }
+
+  async function removeMember(member: Member) {
+    if (!currentTeam) return;
+
+    const confirmed = window.confirm(
+      `Fjern ${member.name} fra "${currentTeam.name}"?`
+    );
+
+    if (!confirmed) return;
+
+    setError('');
+    try {
+      const res = await fetch(`/api/teams/${currentTeam.id}/members/${member.id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      await loadMembers();
+      await loadTeams();
+    } catch (err: any) {
+      setError(err.message);
+    }
+  }
+
   if (!currentTeam) {
     return (
       <div className="team-page empty">
@@ -159,6 +210,9 @@ export default function TeamPage() {
               ⚙️ Indstillinger
             </button>
           )}
+          <button className="settings-btn leave-team-btn" onClick={leaveTeam}>
+            Forlad hold
+          </button>
           <div className="invite-code-box">
             <span className="label">Invitationskode:</span>
             <code className="invite-code">{currentTeam.invite_code}</code>
@@ -191,21 +245,33 @@ export default function TeamPage() {
                     <span className="badge member">Medlem</span>
                   )}
                 </div>
-                {isFormand && member.role !== 'formand' && (
-                  <button 
-                    className="small-btn"
-                    onClick={() => changeRole(member.id, 'formand')}
-                  >
-                    Gør til formand
-                  </button>
-                )}
-                {isFormand && member.role === 'formand' && member.user_id !== currentTeam?.created_by && (
-                  <button 
-                    className="small-btn danger-btn"
-                    onClick={() => changeRole(member.id, 'member')}
-                  >
-                    Fjern formand
-                  </button>
+                {isFormand && (
+                  <div className="member-actions">
+                    {member.role !== 'formand' && (
+                      <>
+                        <button 
+                          className="small-btn"
+                          onClick={() => changeRole(member.id, 'formand')}
+                        >
+                          Gør til formand
+                        </button>
+                        <button 
+                          className="small-btn danger-btn"
+                          onClick={() => removeMember(member)}
+                        >
+                          Fjern medlem
+                        </button>
+                      </>
+                    )}
+                    {member.role === 'formand' && member.user_id !== currentTeam?.created_by && (
+                      <button 
+                        className="small-btn danger-btn"
+                        onClick={() => changeRole(member.id, 'member')}
+                      >
+                        Fjern formand
+                      </button>
+                    )}
+                  </div>
                 )}
               </li>
             ))}

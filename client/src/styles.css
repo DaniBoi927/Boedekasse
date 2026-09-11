@@ -2098,6 +2098,17 @@ button.danger.compact {
   border-color: rgba(255, 255, 255, 0.5);
 }
 
+.leave-team-btn {
+  background: rgba(248, 113, 113, 0.18);
+  border-color: rgba(248, 113, 113, 0.35);
+  color: #fecaca;
+}
+
+.leave-team-btn:hover {
+  background: rgba(248, 113, 113, 0.28);
+  border-color: rgba(248, 113, 113, 0.5);
+}
+
 .members-list {
   list-style: none;
   padding: 0;
@@ -2148,6 +2159,13 @@ button.danger.compact {
 
 .member-role {
   margin-right: 8px;
+}
+
+.member-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
 }
 
 .team-info {
@@ -3700,6 +3718,19 @@ button.full-width {
 
   .modal-overlay {
     align-items: flex-end;
+  }
+
+  .member-item {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .member-actions {
+    width: 100%;
+  }
+
+  .member-actions .small-btn {
+    flex: 1 1 130px;
   }
 
   .modal {
