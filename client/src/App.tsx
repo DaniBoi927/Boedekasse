@@ -5,8 +5,9 @@ import Sidebar from './Sidebar';
 import FinesPage from './FinesPage';
 import FineTypesPage from './FineTypesPage';
 import TeamPage from './TeamPage';
+import StatsPage from './StatsPage';
 
-type Page = 'fines' | 'fine-types' | 'team';
+type Page = 'fines' | 'fine-types' | 'team' | 'stats';
 
 function AppContent() {
   const { user, loading, currentTeam } = useAuth();
@@ -65,6 +66,12 @@ function AppContent() {
           >
             👥 Team
           </button>
+          <button
+            className={page === 'stats' ? 'active' : ''}
+            onClick={() => setPage('stats')}
+          >
+            📊 Statistik
+          </button>
           {currentTeam && (
             <span className="current-team-name">{currentTeam.name}</span>
           )}
@@ -73,6 +80,7 @@ function AppContent() {
         {page === 'fines' && <FinesPage />}
         {page === 'fine-types' && <FineTypesPage />}
         {page === 'team' && <TeamPage />}
+        {page === 'stats' && <StatsPage />}
         
         <footer className="footer">Bygget med ❤️ til padel 🎾</footer>
       </main>

@@ -314,6 +314,45 @@ router.post('/:id/pay', auth_1.authMiddleware, async (req, res) => {
         res.status(500).json({ error: 'Server fejl' });
     }
 });
+// Mark several fines as paid at once (only formand)
+router.post('/bulk-pay', auth_1.authMiddleware, async (req, res) => {
+    const { fine_ids, paid_by } = req.body;
+    const userId = req.userId;
+    const ids = Array.isArray(fine_ids)
+        ? [...new Set(fine_ids.map((id) => Number(id)).filter((id) => Number.isInteger(id) && id > 0))]
+        : [];
+    if (ids.length === 0 || !paid_by) {
+        return res.status(400).json({ error: 'Vælg mindst én bøde og hvem der har betalt' });
+    }
+    try {
+        const pool = await (0, db_1.getPool)();
+        const parameters = ids.map((_, index) => `@fine_id_${index}`);
+        const selectRequest = pool.request();
+        ids.forEach((id, index) => selectRequest.input(`fine_id_${index}`, id));
+        const fineResult = await selectRequest.query(`SELECT id, team_id FROM fines WHERE id IN (${parameters.join(', ')})`);
+        if (fineResult.recordset.length !== ids.length) {
+            return res.status(404).json({ error: 'En eller flere bøder blev ikke fundet' });
+        }
+        const teamIds = [...new Set(fineResult.recordset.map((fine) => Number(fine.team_id)).filter(Boolean))];
+        for (const teamId of teamIds) {
+            if (!(await isFormand(pool, teamId, userId))) {
+                return res.status(403).json({ error: 'Kun formanden kan markere bøder som betalt' });
+            }
+        }
+        const updateRequest = pool.request().input('paid_by', paid_by);
+        ids.forEach((id, index) => updateRequest.input(`update_fine_id_${index}`, id));
+        const updateResult = await updateRequest.query(`
+      UPDATE fines
+      SET paid = 1, paid_by = @paid_by, paid_at = SYSDATETIMEOFFSET()
+      WHERE id IN (${ids.map((_, index) => `@update_fine_id_${index}`).join(', ')}) AND paid = 0
+    `);
+        res.json({ success: true, updated: updateResult.rowsAffected[0] || 0 });
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Server fejl' });
+    }
+});
 // Update fine amount (only formand) - for lucky wheel
 router.put('/:id', auth_1.authMiddleware, async (req, res) => {
     const { id } = req.params;

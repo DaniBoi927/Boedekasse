@@ -10,6 +10,537 @@
   --shadow: 0 8px 32px rgba(0, 102, 179, 0.15);
 }
 
+/* ==================== */
+/* DASHBOARD + STATISTICS */
+/* ==================== */
+.dashboard-section {
+  margin-bottom: 18px;
+}
+
+.dashboard-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.dashboard-metric {
+  min-width: 0;
+  padding: 16px 18px;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(0,102,179,0.34), rgba(20,45,66,0.92));
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+}
+
+.dashboard-metric span,
+.dashboard-metric small {
+  display: block;
+  color: rgba(255,255,255,0.62);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.dashboard-metric strong {
+  display: block;
+  overflow: hidden;
+  margin-top: 8px;
+  color: white;
+  font-size: 22px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-metric small {
+  margin-top: 5px;
+  color: rgba(255,255,255,0.5);
+  font-weight: 500;
+}
+
+.dashboard-metric .paid-text,
+.paid-text {
+  color: #86efac;
+}
+
+.dashboard-metric .owed-text,
+.owed-text {
+  color: #fbbf24;
+}
+
+.dashboard-recent {
+  padding: 18px 20px;
+}
+
+.dashboard-recent-header,
+.stats-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dashboard-recent-header h2,
+.stats-panel-header h2 {
+  margin: 0;
+}
+
+.dashboard-recent-header > span,
+.stats-panel-header p {
+  margin: 0;
+  color: rgba(255,255,255,0.52);
+  font-size: 12px;
+}
+
+.recent-fine-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 20px;
+  margin-top: 14px;
+}
+
+.recent-fine-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.recent-fine-row > div:first-child {
+  min-width: 0;
+}
+
+.recent-fine-row strong,
+.recent-fine-row span {
+  display: block;
+}
+
+.recent-fine-row strong {
+  overflow: hidden;
+  color: white;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recent-fine-row span {
+  overflow: hidden;
+  margin-top: 3px;
+  color: rgba(255,255,255,0.55);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recent-fine-amount {
+  flex: 0 0 auto;
+  text-align: right;
+}
+
+.recent-fine-amount .status-paid,
+.recent-fine-amount .status-unpaid {
+  font-size: 11px;
+}
+
+.status-paid {
+  color: #86efac !important;
+}
+
+.status-unpaid {
+  color: #fbbf24 !important;
+}
+
+.quick-amounts,
+.recent-reasons,
+.bulk-payment-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.quick-amounts > span,
+.recent-reasons > span,
+.bulk-payment-toolbar > span {
+  color: rgba(255,255,255,0.55);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.quick-amounts button,
+.recent-reasons button {
+  padding: 6px 9px;
+  border-radius: 8px;
+  color: rgba(255,255,255,0.78);
+  font-size: 12px;
+}
+
+.quick-amounts button.selected {
+  border-color: var(--ball-yellow);
+  background: rgba(204,255,0,0.16);
+  color: var(--ball-yellow);
+}
+
+.recent-reasons button {
+  overflow: hidden;
+  max-width: 180px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.undo-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(134,239,172,0.28);
+  border-radius: 8px;
+  background: rgba(34,197,94,0.12);
+  color: #bbf7d0;
+  font-size: 13px;
+}
+
+.undo-banner button {
+  padding: 6px 10px;
+  border-color: rgba(134,239,172,0.45);
+  color: #bbf7d0;
+}
+
+.bulk-payment-toolbar {
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.bulk-payment-toolbar button {
+  padding: 7px 10px;
+  font-size: 12px;
+}
+
+.fine-select-wrap {
+  position: absolute;
+  top: 14px;
+  left: 18px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.fine-select-wrap input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--ball-yellow);
+}
+
+/* Statistics page */
+.stats-page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 24px 18px 40px;
+}
+
+.stats-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.stats-metric-card {
+  min-width: 0;
+  padding: 18px;
+}
+
+.stats-metric-card.paid {
+  border-color: rgba(134,239,172,0.28);
+}
+
+.stats-metric-card.warning {
+  border-color: rgba(251,191,36,0.3);
+}
+
+.stats-metric-label,
+.stats-metric-card small {
+  display: block;
+  color: rgba(255,255,255,0.58);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.stats-metric-card strong {
+  display: block;
+  overflow: hidden;
+  margin: 8px 0 5px;
+  color: white;
+  font-size: 22px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stats-metric-card.paid strong {
+  color: #86efac;
+}
+
+.stats-metric-card.warning strong {
+  color: #fbbf24;
+}
+
+.stats-metric-card small {
+  color: rgba(255,255,255,0.48);
+  font-weight: 500;
+}
+
+.stats-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.stats-panel {
+  min-width: 0;
+  padding: 20px;
+}
+
+.stats-panel-header {
+  margin-bottom: 16px;
+}
+
+.stats-panel-header h2 {
+  color: white;
+  font-size: 18px;
+}
+
+.stats-panel-header p {
+  margin-top: 5px;
+  font-weight: 500;
+}
+
+.stats-ranking,
+.stats-player-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stats-ranking-row,
+.stats-player-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.stats-ranking-row:last-child,
+.stats-player-row:last-child {
+  border-bottom: 0;
+}
+
+.stats-rank {
+  flex: 0 0 28px;
+  font-size: 21px;
+  text-align: center;
+}
+
+.stats-ranking-player {
+  flex: 1;
+  min-width: 0;
+}
+
+.stats-ranking-player strong,
+.stats-ranking-player small {
+  display: block;
+}
+
+.stats-ranking-player strong {
+  overflow: hidden;
+  color: white;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stats-ranking-player small {
+  margin-top: 3px;
+  color: rgba(255,255,255,0.5);
+  font-size: 12px;
+}
+
+.stats-ranking-row > strong {
+  flex: 0 0 auto;
+  color: var(--ball-yellow);
+  font-size: 14px;
+}
+
+.payment-breakdown {
+  padding-top: 12px;
+}
+
+.breakdown-bar {
+  height: 18px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: rgba(251,191,36,0.35);
+}
+
+.breakdown-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #22c55e, #86efac);
+}
+
+.breakdown-legend {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.breakdown-legend span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255,255,255,0.68);
+  font-size: 13px;
+}
+
+.breakdown-legend strong {
+  margin-left: auto;
+  color: white;
+}
+
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.paid-dot { background: #86efac; }
+.owed-dot { background: #fbbf24; }
+
+.monthly-panel {
+  margin-bottom: 16px;
+}
+
+.monthly-chart {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  align-items: end;
+  gap: 12px;
+  min-height: 190px;
+  padding-top: 10px;
+}
+
+.monthly-column {
+  display: grid;
+  grid-template-rows: 28px 1fr 22px;
+  align-items: end;
+  height: 170px;
+  min-width: 0;
+  text-align: center;
+}
+
+.monthly-value,
+.monthly-label {
+  color: rgba(255,255,255,0.56);
+  font-size: 11px;
+}
+
+.monthly-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.monthly-bar-wrap {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  height: 100%;
+}
+
+.monthly-bar {
+  width: min(42px, 72%);
+  min-height: 2px;
+  border-radius: 7px 7px 2px 2px;
+  background: linear-gradient(180deg, var(--ball-yellow), var(--court-blue));
+}
+
+.monthly-label {
+  padding-top: 7px;
+  color: rgba(255,255,255,0.72);
+  text-transform: capitalize;
+}
+
+.stats-player-row {
+  justify-content: space-between;
+}
+
+.stats-player-row span:first-child {
+  color: white;
+  font-weight: 600;
+}
+
+.stats-player-row span:last-child {
+  color: var(--ball-yellow);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.stats-loading {
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .dashboard-metrics,
+  .stats-metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .stats-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .dashboard-metrics,
+  .stats-metric-grid,
+  .recent-fine-list {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-metric strong,
+  .stats-metric-card strong {
+    font-size: 20px;
+  }
+
+  .dashboard-recent,
+  .stats-panel {
+    padding: 16px;
+  }
+
+  .bulk-payment-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .bulk-payment-toolbar button {
+    width: 100%;
+  }
+
+  .monthly-chart {
+    gap: 5px;
+  }
+
+  .monthly-value {
+    font-size: 9px;
+  }
+}
+
 body { 
   font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; 
   background: #0a1929;

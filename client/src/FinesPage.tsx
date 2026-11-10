@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from './AuthContext';
 import LuckyWheel from './LuckyWheel';
 
@@ -54,9 +54,13 @@ export default function FinesPage() {
   const [sortBy, setSortBy] = useState<'outstanding' | 'paid' | 'count' | 'latest' | 'name'>('outstanding');
   const [expandedPlayers, setExpandedPlayers] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
-  const [payModalFineId, setPayModalFineId] = useState<number | null>(null);
+  const [payModalFineIds, setPayModalFineIds] = useState<number[]>([]);
   const [payModalPayer, setPayModalPayer] = useState('');
   const [wheelFine, setWheelFine] = useState<Fine | null>(null);
+  const [selectedFineIds, setSelectedFineIds] = useState<Set<number>>(new Set());
+  const [lastAddedFine, setLastAddedFine] = useState<Fine | null>(null);
+  const payerRef = useRef<HTMLSelectElement>(null);
+  const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function formatCurrency(v: number) {
     return v.toLocaleString('da-DK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' kr';
@@ -87,7 +91,11 @@ export default function FinesPage() {
 
       if (finesRes.ok) {
         const data = await finesRes.json();
-        setFines(Array.isArray(data) ? data : []);
+        const nextFines = Array.isArray(data) ? data : [];
+        setFines(nextFines);
+        setSelectedFineIds(current => new Set(
+          [...current].filter(id => nextFines.some((fine: Fine) => fine.id === id && !fine.paid))
+        ));
       }
       if (totalsRes.ok) {
         const data = await totalsRes.json();
@@ -112,6 +120,23 @@ export default function FinesPage() {
   useEffect(() => {
     load();
   }, [currentTeam]);
+
+  useEffect(() => {
+    if (!currentTeam || !isFormand || typeof window === 'undefined') return;
+    if (!window.matchMedia('(max-width: 700px)').matches) return;
+    window.setTimeout(() => payerRef.current?.focus(), 0);
+  }, [currentTeam, isFormand]);
+
+  useEffect(() => {
+    setSelectedFineIds(new Set());
+    setLastAddedFine(null);
+  }, [currentTeam?.id]);
+
+  useEffect(() => {
+    return () => {
+      if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (!selectedFineType) return;
@@ -149,6 +174,10 @@ export default function FinesPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
+
+      setLastAddedFine(data);
+      if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+      undoTimerRef.current = setTimeout(() => setLastAddedFine(null), 10000);
       
       setPayer('');
       setAmount('');
@@ -163,21 +192,41 @@ export default function FinesPage() {
     }
   }
 
-  async function markPaid(id: number, paid_by: string) {
+  async function undoLastAddedFine() {
+    if (!lastAddedFine) return;
+    try {
+      setLoading(true);
+      const res = await fetch(`/api/fines/${lastAddedFine.id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setLastAddedFine(null);
+      await load();
+    } catch (e: any) {
+      setError(e.message || 'Kunne ikke fortryde bøden');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function markPaid(ids: number[], paid_by: string) {
     if (!paid_by) return;
     try {
       setLoading(true);
-      const res = await fetch(`/api/fines/${id}/pay`, {
+      const isBulk = ids.length > 1;
+      const res = await fetch(isBulk ? '/api/fines/bulk-pay' : `/api/fines/${ids[0]}/pay`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ paid_by })
+        body: JSON.stringify(isBulk ? { fine_ids: ids, paid_by } : { paid_by })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setPayModalFineId(null);
+      setPayModalFineIds([]);
       setPayModalPayer('');
       await load();
     } catch (e: any) {
@@ -188,9 +237,18 @@ export default function FinesPage() {
     }
   }
 
-  function openPayModal(fineId: number, currentPayer: string) {
-    setPayModalFineId(fineId);
+  function openPayModal(fineIds: number[], currentPayer = '') {
+    setPayModalFineIds(fineIds);
     setPayModalPayer(currentPayer);
+  }
+
+  function toggleFineSelection(id: number) {
+    setSelectedFineIds(current => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   }
 
   async function deleteFine(id: number) {
@@ -332,6 +390,55 @@ export default function FinesPage() {
     );
   }, [displayed]);
 
+  const quickAmounts = useMemo(() => {
+    const values = [...fineTypes.map(fineType => Number(fineType.amount)), 20, 40, 50, 100]
+      .filter(amountValue => Number.isFinite(amountValue) && amountValue > 0);
+    return [...new Set(values)].sort((a, b) => a - b).slice(0, 6);
+  }, [fineTypes]);
+
+  const recentReasons = useMemo(() => {
+    const seen = new Set<string>();
+    return [...fines]
+      .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
+      .map(fine => fine.reason?.trim())
+      .filter((value): value is string => Boolean(value))
+      .filter(value => {
+        if (seen.has(value)) return false;
+        seen.add(value);
+        return true;
+      })
+      .slice(0, 6);
+  }, [fines]);
+
+  const totalPaid = useMemo(
+    () => fines.reduce((sum, fine) => sum + (fine.paid ? Number(fine.amount) : 0), 0),
+    [fines]
+  );
+  const totalOutstanding = useMemo(
+    () => fines.reduce((sum, fine) => sum + (!fine.paid ? Number(fine.amount) : 0), 0),
+    [fines]
+  );
+  const mostActive = useMemo(() => {
+    const counts = new Map<string, number>();
+    fines.forEach(fine => counts.set(fine.payer, (counts.get(fine.payer) || 0) + 1));
+    return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'da-DK'))[0];
+  }, [fines]);
+  const recentFines = useMemo(
+    () => [...fines].sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()).slice(0, 5),
+    [fines]
+  );
+  const visibleUnpaidIds = useMemo(
+    () => displayed.filter(fine => !fine.paid).map(fine => fine.id),
+    [displayed]
+  );
+  const allVisibleUnpaidSelected = visibleUnpaidIds.length > 0 && visibleUnpaidIds.every(id => selectedFineIds.has(id));
+
+  function formatDate(value?: string | null) {
+    if (!value) return '';
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString('da-DK');
+  }
+
   function togglePlayer(player: string) {
     setExpandedPlayers(current => {
       const next = new Set(current);
@@ -375,6 +482,54 @@ export default function FinesPage() {
           </a>
         )}
       </div>
+
+      <section className="dashboard-section" aria-label="Dashboard">
+        <div className="dashboard-metrics">
+          <div className="dashboard-metric">
+            <span>✅ Samlet betalt</span>
+            <strong className="paid-text">{formatCurrency(totalPaid)}</strong>
+          </div>
+          <div className="dashboard-metric">
+            <span>💰 Samlet skyldig</span>
+            <strong className="owed-text">{formatCurrency(totalOutstanding)}</strong>
+          </div>
+          <div className="dashboard-metric">
+            <span>📋 Antal bøder</span>
+            <strong>{fines.length}</strong>
+          </div>
+          <div className="dashboard-metric">
+            <span>🔥 Mest aktive spiller</span>
+            <strong>{mostActive ? mostActive[0] : 'Ingen endnu'}</strong>
+            {mostActive && <small>{mostActive[1]} bøde{mostActive[1] === 1 ? '' : 'r'}</small>}
+          </div>
+        </div>
+
+        <div className="dashboard-recent card">
+          <div className="dashboard-recent-header">
+            <h2>🕘 Seneste bøder</h2>
+            <span>{recentFines.length} seneste</span>
+          </div>
+          {recentFines.length === 0 ? (
+            <p className="muted">Der er ikke oprettet bøder endnu.</p>
+          ) : (
+            <div className="recent-fine-list">
+              {recentFines.map(fine => (
+                <div className="recent-fine-row" key={fine.id}>
+                  <div>
+                    <strong>{fine.payer}</strong>
+                    <span>{fine.reason || 'Ingen årsag'} · {formatDate(fine.created_at)}</span>
+                  </div>
+                  <div className="recent-fine-amount">
+                    <strong>{formatCurrency(Number(fine.amount))}</strong>
+                    <span className={fine.paid ? 'status-paid' : 'status-unpaid'}>{fine.paid ? 'Betalt' : 'Skyldig'}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
       <div className="fines-grid">
         <section className="left">
           {isFormand && (
@@ -387,6 +542,7 @@ export default function FinesPage() {
                 <div className="row">
                   <select
                     aria-label="payer"
+                    ref={payerRef}
                     value={payer}
                     onChange={e => {
                       setPayer(e.target.value);
@@ -411,6 +567,22 @@ export default function FinesPage() {
                     step="0.01"
                     min="0"
                   />
+                </div>
+                <div className="quick-amounts" aria-label="Hurtigbeløb">
+                  <span>Hurtigbeløb:</span>
+                  {quickAmounts.map(quickAmount => (
+                    <button
+                      type="button"
+                      key={quickAmount}
+                      className={Number(amount) === quickAmount ? 'selected' : ''}
+                      onClick={() => {
+                        setAmount(String(quickAmount));
+                        setError(null);
+                      }}
+                    >
+                      {quickAmount} kr
+                    </button>
+                  ))}
                 </div>
                 <select
                   value={selectedFineType}
@@ -446,6 +618,24 @@ export default function FinesPage() {
                   }}
                   className="reason-input"
                 />
+                {recentReasons.length > 0 && (
+                  <div className="recent-reasons">
+                    <span>Senest anvendt:</span>
+                    {recentReasons.map(recentReason => (
+                      <button
+                        type="button"
+                        key={recentReason}
+                        onClick={() => {
+                          setReason(recentReason);
+                          setSelectedFineType('');
+                          setError(null);
+                        }}
+                      >
+                        {recentReason}
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <div className="form-actions">
                   <button className="primary" type="submit" disabled={loading}>
                     Tilføj bøde
@@ -464,6 +654,12 @@ export default function FinesPage() {
                   </button>
                 </div>
                 {error && <div className="error">{error}</div>}
+                {lastAddedFine && (
+                  <div className="undo-banner">
+                    <span>Bøden til {lastAddedFine.payer} blev tilføjet.</span>
+                    <button type="button" onClick={undoLastAddedFine} disabled={loading}>Fortryd</button>
+                  </div>
+                )}
               </form>
             </div>
           )}
@@ -563,7 +759,7 @@ export default function FinesPage() {
         <section className="right">
           <div className="card">
             <div className="list-header">
-              <h2>🏆 Bøder</h2>
+              <h2>📜 Bøde- og betalingshistorik</h2>
               <div className="fine-count">{displayed.length} af {fines.length}</div>
             </div>
 
@@ -605,6 +801,28 @@ export default function FinesPage() {
                     Betalte
                   </button>
                 </div>
+
+                {isFormand && (
+                  <div className="bulk-payment-toolbar">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedFineIds(allVisibleUnpaidSelected ? new Set() : new Set(visibleUnpaidIds))}
+                      disabled={visibleUnpaidIds.length === 0}
+                    >
+                      {allVisibleUnpaidSelected ? 'Fravælg ubetalte' : 'Vælg alle ubetalte'}
+                    </button>
+                    <span>{selectedFineIds.size} valgt</span>
+                    {selectedFineIds.size > 0 && (
+                      <button
+                        type="button"
+                        className="primary"
+                        onClick={() => openPayModal([...selectedFineIds])}
+                      >
+                        Markér valgte som betalt
+                      </button>
+                    )}
+                  </div>
+                )}
 
                 <div className="fine-summary-strip">
                   <div>
@@ -661,18 +879,30 @@ export default function FinesPage() {
                             <div className="fine-details">
                               {group.fines.map(f => (
                                 <div key={f.id} className={`fine-detail ${f.paid ? 'paid' : ''}`}>
+                                  {isFormand && !f.paid && (
+                                    <label className="fine-select-wrap" title="Vælg bøde">
+                                      <input
+                                        type="checkbox"
+                                        checked={selectedFineIds.has(f.id)}
+                                        onChange={() => toggleFineSelection(f.id)}
+                                        aria-label={`Vælg bøde til ${f.payer}`}
+                                      />
+                                    </label>
+                                  )}
                                   <div className="fine-detail-main">
                                     <strong>{formatCurrency(Number(f.amount))}</strong>
                                     <span>{f.reason || 'Ingen årsag'}</span>
                                   </div>
                                   <div className="fine-detail-meta">
-                                    {f.paid ? `Betalt${f.paid_by ? ` af ${f.paid_by}` : ''}` : 'Ubetalt'}
+                                    {f.paid
+                                      ? `Betalt${f.paid_by ? ` af ${f.paid_by}` : ''}${f.paid_at ? ` · ${formatDate(f.paid_at)}` : ''}`
+                                      : 'Ubetalt'}
                                   </div>
                                   {isFormand && (
                                     <div className="fine-detail-actions">
                                       {!f.paid && (
                                         <>
-                                          <button type="button" onClick={() => openPayModal(f.id, f.payer)}>Betalt</button>
+                                          <button type="button" onClick={() => openPayModal([f.id], f.payer)}>Betalt</button>
                                           {!f.wheel_used && (
                                             <button type="button" className="wheel-btn" onClick={() => setWheelFine(f)}>🎰</button>
                                           )}
@@ -703,11 +933,13 @@ export default function FinesPage() {
       </div>
 
       {/* Pay Modal */}
-      {payModalFineId && (
-        <div className="modal-overlay" onClick={() => setPayModalFineId(null)}>
+      {payModalFineIds.length > 0 && (
+        <div className="modal-overlay" onClick={() => setPayModalFineIds([])}>
           <div className="modal" onClick={e => e.stopPropagation()}>
-            <h3>💰 Marker som betalt</h3>
-            <p className="modal-subtitle">Hvem har betalt denne bøde?</p>
+            <h3>💰 Markér som betalt</h3>
+            <p className="modal-subtitle">
+              Hvem har betalt {payModalFineIds.length === 1 ? 'denne bøde' : `${payModalFineIds.length} bøder`}?
+            </p>
             <select
               value={payModalPayer}
               onChange={e => setPayModalPayer(e.target.value)}
@@ -722,12 +954,12 @@ export default function FinesPage() {
             <div className="modal-actions">
               <button 
                 className="primary" 
-                onClick={() => markPaid(payModalFineId, payModalPayer)}
+                onClick={() => markPaid(payModalFineIds, payModalPayer)}
                 disabled={!payModalPayer || loading}
               >
                 {loading ? 'Gemmer...' : 'Bekræft betaling'}
               </button>
-              <button onClick={() => setPayModalFineId(null)}>Annuller</button>
+              <button onClick={() => setPayModalFineIds([])}>Annuller</button>
             </div>
           </div>
         </div>
