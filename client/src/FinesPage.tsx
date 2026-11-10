@@ -467,40 +467,34 @@ export default function FinesPage() {
                   ))}
                 </select>
 
-                <div className="fine-choice-section">
-                  <span className="add-field-label">Hvad skete der?</span>
-                  <div className="fine-choice-grid">
-                    {fineTypes.map(ft => (
-                      <button
-                        type="button"
-                        key={ft.id}
-                        className={`fine-choice ${selectedFineType === ft.id ? 'selected' : ''}`}
-                        onClick={() => {
-                          setSelectedFineType(ft.id);
-                          setReason(ft.reason);
-                          setAmount(String(ft.amount));
-                          setError(null);
-                        }}
-                      >
-                        <span>{ft.reason}</span>
-                        <strong>{formatCurrency(ft.amount)}</strong>
-                      </button>
-                    ))}
-                    <button
-                      type="button"
-                      className={`fine-choice custom ${selectedFineType === '' && reason === '' ? 'selected' : ''}`}
-                      onClick={() => {
-                        setSelectedFineType('');
-                        setReason('');
-                        setAmount('');
-                        setError(null);
-                      }}
-                    >
-                      <span>＋ Egen bøde</span>
-                      <strong>Valgfrit beløb</strong>
-                    </button>
-                  </div>
-                </div>
+                <label className="add-field-label" htmlFor="fine-type">Bødetype</label>
+                <select
+                  id="fine-type"
+                  value={selectedFineType}
+                  onChange={e => {
+                    const id = e.target.value;
+                    setSelectedFineType(id ? Number(id) : '');
+                    setError(null);
+                    if (id) {
+                      const ft = fineTypes.find(f => f.id === Number(id));
+                      if (ft) {
+                        setReason(ft.reason);
+                        setAmount(String(ft.amount));
+                      }
+                    } else {
+                      setReason('');
+                      setAmount('');
+                    }
+                  }}
+                  className="player-select fine-type-select"
+                >
+                  <option value="">Egen bøde</option>
+                  {fineTypes.map(ft => (
+                    <option key={ft.id} value={ft.id}>
+                      {ft.reason} ({formatCurrency(ft.amount)})
+                    </option>
+                  ))}
+                </select>
 
                 {selectedFineType === '' && (
                   <div className="custom-fine-fields">
