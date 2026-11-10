@@ -381,26 +381,6 @@ export default function FinesPage() {
     );
   }, [displayed]);
 
-  const quickAmounts = useMemo(() => {
-    const values = [...fineTypes.map(fineType => Number(fineType.amount)), 20, 40, 50, 100]
-      .filter(amountValue => Number.isFinite(amountValue) && amountValue > 0);
-    return [...new Set(values)].sort((a, b) => a - b).slice(0, 6);
-  }, [fineTypes]);
-
-  const recentReasons = useMemo(() => {
-    const seen = new Set<string>();
-    return [...fines]
-      .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
-      .map(fine => fine.reason?.trim())
-      .filter((value): value is string => Boolean(value))
-      .filter(value => {
-        if (seen.has(value)) return false;
-        seen.add(value);
-        return true;
-      })
-      .slice(0, 6);
-  }, [fines]);
-
   const visibleUnpaidIds = useMemo(
     () => displayed.filter(fine => !fine.paid).map(fine => fine.id),
     [displayed]
@@ -463,104 +443,89 @@ export default function FinesPage() {
             <div className="card add-fine-card">
               <div className="add-fine-header">
                 <span className="add-fine-icon">🎾</span>
-                <h2>Tilføj bøde</h2>
+                <div>
+                  <h2>Tilføj bøde</h2>
+                  <span className="add-fine-subtitle">Vælg spiller og bøde. Så er den registreret.</span>
+                </div>
               </div>
               <form onSubmit={add} className="add-form">
-                <div className="row">
-                  <select
-                    aria-label="payer"
-                    ref={payerRef}
-                    value={payer}
-                    onChange={e => {
-                      setPayer(e.target.value);
-                      setError(null);
-                    }}
-                    className="player-select"
-                  >
-                    <option value="">Vælg spiller</option>
-                    {members.map(m => (
-                      <option key={m.user_id} value={m.name}>{m.name}</option>
-                    ))}
-                  </select>
-                  <input
-                    aria-label="amount"
-                    placeholder="Beløb (kr)"
-                    value={amount}
-                    onChange={e => {
-                      setAmount(e.target.value);
-                      setError(null);
-                    }}
-                    type="number"
-                    step="0.01"
-                    min="0"
-                  />
-                </div>
-                <div className="quick-amounts" aria-label="Hurtigbeløb">
-                  <span>Hurtigbeløb:</span>
-                  {quickAmounts.map(quickAmount => (
-                    <button
-                      type="button"
-                      key={quickAmount}
-                      className={Number(amount) === quickAmount ? 'selected' : ''}
-                      onClick={() => {
-                        setAmount(String(quickAmount));
-                        setError(null);
-                      }}
-                    >
-                      {quickAmount} kr
-                    </button>
-                  ))}
-                </div>
+                <label className="add-field-label" htmlFor="fine-player">Hvem får bøden?</label>
                 <select
-                  value={selectedFineType}
+                  id="fine-player"
+                  aria-label="payer"
+                  ref={payerRef}
+                  value={payer}
                   onChange={e => {
-                    const id = e.target.value;
-                    setSelectedFineType(id ? Number(id) : '');
+                    setPayer(e.target.value);
                     setError(null);
-                    if (id) {
-                      const ft = fineTypes.find(f => f.id === Number(id));
-                      if (ft) {
-                        setReason(ft.reason);
-                        setAmount(String(ft.amount));
-                      }
-                    }
                   }}
-                  className="player-select full-width"
+                  className="player-select"
                 >
-                  <option value="">Vælg bødetype</option>
-                  {fineTypes.map(ft => (
-                    <option key={ft.id} value={ft.id}>
-                      {ft.reason} ({formatCurrency(ft.amount)})
-                    </option>
+                  <option value="">Vælg spiller</option>
+                  {members.map(m => (
+                    <option key={m.user_id} value={m.name}>{m.name}</option>
                   ))}
                 </select>
-                <input
-                  aria-label="reason"
-                  placeholder="Skriv egen årsag"
-                  value={reason}
-                  onChange={e => {
-                    setReason(e.target.value);
-                    setSelectedFineType('');
-                    setError(null);
-                  }}
-                  className="reason-input"
-                />
-                {recentReasons.length > 0 && (
-                  <div className="recent-reasons">
-                    <span>Senest anvendt:</span>
-                    {recentReasons.map(recentReason => (
+
+                <div className="fine-choice-section">
+                  <span className="add-field-label">Hvad skete der?</span>
+                  <div className="fine-choice-grid">
+                    {fineTypes.map(ft => (
                       <button
                         type="button"
-                        key={recentReason}
+                        key={ft.id}
+                        className={`fine-choice ${selectedFineType === ft.id ? 'selected' : ''}`}
                         onClick={() => {
-                          setReason(recentReason);
-                          setSelectedFineType('');
+                          setSelectedFineType(ft.id);
+                          setReason(ft.reason);
+                          setAmount(String(ft.amount));
                           setError(null);
                         }}
                       >
-                        {recentReason}
+                        <span>{ft.reason}</span>
+                        <strong>{formatCurrency(ft.amount)}</strong>
                       </button>
                     ))}
+                    <button
+                      type="button"
+                      className={`fine-choice custom ${selectedFineType === '' && reason === '' ? 'selected' : ''}`}
+                      onClick={() => {
+                        setSelectedFineType('');
+                        setReason('');
+                        setAmount('');
+                        setError(null);
+                      }}
+                    >
+                      <span>＋ Egen bøde</span>
+                      <strong>Valgfrit beløb</strong>
+                    </button>
+                  </div>
+                </div>
+
+                {selectedFineType === '' && (
+                  <div className="custom-fine-fields">
+                    <input
+                      aria-label="reason"
+                      placeholder="Skriv årsag"
+                      value={reason}
+                      onChange={e => {
+                        setReason(e.target.value);
+                        setError(null);
+                      }}
+                      className="reason-input"
+                    />
+                    <input
+                      aria-label="amount"
+                      placeholder="Beløb (kr)"
+                      value={amount}
+                      onChange={e => {
+                        setAmount(e.target.value);
+                        setError(null);
+                      }}
+                      type="number"
+                      step="0.01"
+                      min="0"
+                    />
                   </div>
                 )}
                 <div className="form-actions">
