@@ -148,6 +148,7 @@ export default function FinesPage() {
     e.preventDefault();
     setError(null);
     if (!payer.trim()) return setError('Spiller er påkrævet');
+    if (!selectedFineType) return setError('Vælg en bødetype');
     const fineType = selectedFineType ? fineTypes.find(f => f.id === selectedFineType) : undefined;
     const resolvedAmount = amount || (fineType ? String(fineType.amount) : '');
     const resolvedReason = reason.trim() || fineType?.reason || '';
@@ -488,40 +489,13 @@ export default function FinesPage() {
                   }}
                   className="player-select fine-type-select"
                 >
-                  <option value="">Egen bøde</option>
+                  <option value="" disabled>Vælg bødetype</option>
                   {fineTypes.map(ft => (
                     <option key={ft.id} value={ft.id}>
                       {ft.reason} ({formatCurrency(ft.amount)})
                     </option>
                   ))}
                 </select>
-
-                {selectedFineType === '' && (
-                  <div className="custom-fine-fields">
-                    <input
-                      aria-label="reason"
-                      placeholder="Skriv årsag"
-                      value={reason}
-                      onChange={e => {
-                        setReason(e.target.value);
-                        setError(null);
-                      }}
-                      className="reason-input"
-                    />
-                    <input
-                      aria-label="amount"
-                      placeholder="Beløb (kr)"
-                      value={amount}
-                      onChange={e => {
-                        setAmount(e.target.value);
-                        setError(null);
-                      }}
-                      type="number"
-                      step="0.01"
-                      min="0"
-                    />
-                  </div>
-                )}
                 <div className="form-actions">
                   <button className="primary" type="submit" disabled={loading}>
                     Tilføj bøde

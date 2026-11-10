@@ -4574,20 +4574,3 @@ button.full-width {
 .fine-type-select {
   margin-top: 0;
 }
-
-.custom-fine-fields {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 130px;
-  gap: 9px;
-  margin-top: 2px;
-}
-
-.custom-fine-fields input {
-  margin-top: 0;
-}
-
-@media (max-width: 480px) {
-  .custom-fine-fields {
-    grid-template-columns: 1fr;
-  }
-}
