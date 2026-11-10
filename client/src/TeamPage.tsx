@@ -199,6 +199,7 @@ export default function TeamPage() {
       </div>
       <div className="team-header">
         <div>
+          <span className="section-eyebrow">Holdoversigt</span>
           <h2>{currentTeam.name}</h2>
           <p className="team-role">
             Du er {currentTeam.role === 'formand' ? '👑 Formand' : '👤 Medlem'}
@@ -225,8 +226,29 @@ export default function TeamPage() {
 
       {error && <div className="error">{error}</div>}
 
-      <div className="card">
-        <h3>Medlemmer ({members.length})</h3>
+      <div className="team-overview-strip">
+        <div>
+          <span>Medlemmer</span>
+          <strong>{members.length}</strong>
+        </div>
+        <div>
+          <span>Din rolle</span>
+          <strong>{currentTeam.role === 'formand' ? 'Formand' : 'Medlem'}</strong>
+        </div>
+        <div>
+          <span>MobilePay</span>
+          <strong>{currentTeam.mobilepay_link ? 'Klar til betaling' : 'Ikke sat op'}</strong>
+        </div>
+      </div>
+
+      <div className="card team-members-card">
+        <div className="section-heading">
+          <div>
+            <span className="section-eyebrow">Holdets deltagere</span>
+            <h3>Medlemmer</h3>
+          </div>
+          <span className="member-count-badge">{members.length}</span>
+        </div>
         {loading ? (
           <p className="muted">Indlæser...</p>
         ) : (

@@ -54,8 +54,6 @@ export default function FinesPage() {
   const [sortBy, setSortBy] = useState<'outstanding' | 'paid' | 'count' | 'latest' | 'name'>('outstanding');
   const [expandedPlayers, setExpandedPlayers] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
-  const [payModalFineIds, setPayModalFineIds] = useState<number[]>([]);
-  const [payModalPayer, setPayModalPayer] = useState('');
   const [wheelFine, setWheelFine] = useState<Fine | null>(null);
   const [selectedFineIds, setSelectedFineIds] = useState<Set<number>>(new Set());
   const [lastAddedFine, setLastAddedFine] = useState<Fine | null>(null);
@@ -211,8 +209,8 @@ export default function FinesPage() {
     }
   }
 
-  async function markPaid(ids: number[], paid_by: string) {
-    if (!paid_by) return;
+  async function markPaid(ids: number[]) {
+    if (ids.length === 0) return;
     try {
       setLoading(true);
       const isBulk = ids.length > 1;
@@ -222,12 +220,10 @@ export default function FinesPage() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify(isBulk ? { fine_ids: ids, paid_by } : { paid_by })
+        body: JSON.stringify(isBulk ? { fine_ids: ids } : {})
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setPayModalFineIds([]);
-      setPayModalPayer('');
       await load();
     } catch (e: any) {
       console.error(e);
@@ -235,11 +231,6 @@ export default function FinesPage() {
     } finally {
       setLoading(false);
     }
-  }
-
-  function openPayModal(fineIds: number[], currentPayer = '') {
-    setPayModalFineIds(fineIds);
-    setPayModalPayer(currentPayer);
   }
 
   function toggleFineSelection(id: number) {
@@ -410,23 +401,6 @@ export default function FinesPage() {
       .slice(0, 6);
   }, [fines]);
 
-  const totalPaid = useMemo(
-    () => fines.reduce((sum, fine) => sum + (fine.paid ? Number(fine.amount) : 0), 0),
-    [fines]
-  );
-  const totalOutstanding = useMemo(
-    () => fines.reduce((sum, fine) => sum + (!fine.paid ? Number(fine.amount) : 0), 0),
-    [fines]
-  );
-  const mostActive = useMemo(() => {
-    const counts = new Map<string, number>();
-    fines.forEach(fine => counts.set(fine.payer, (counts.get(fine.payer) || 0) + 1));
-    return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'da-DK'))[0];
-  }, [fines]);
-  const recentFines = useMemo(
-    () => [...fines].sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()).slice(0, 5),
-    [fines]
-  );
   const visibleUnpaidIds = useMemo(
     () => displayed.filter(fine => !fine.paid).map(fine => fine.id),
     [displayed]
@@ -482,53 +456,6 @@ export default function FinesPage() {
           </a>
         )}
       </div>
-
-      <section className="dashboard-section" aria-label="Dashboard">
-        <div className="dashboard-metrics">
-          <div className="dashboard-metric">
-            <span>✅ Samlet betalt</span>
-            <strong className="paid-text">{formatCurrency(totalPaid)}</strong>
-          </div>
-          <div className="dashboard-metric">
-            <span>💰 Samlet skyldig</span>
-            <strong className="owed-text">{formatCurrency(totalOutstanding)}</strong>
-          </div>
-          <div className="dashboard-metric">
-            <span>📋 Antal bøder</span>
-            <strong>{fines.length}</strong>
-          </div>
-          <div className="dashboard-metric">
-            <span>🔥 Mest aktive spiller</span>
-            <strong>{mostActive ? mostActive[0] : 'Ingen endnu'}</strong>
-            {mostActive && <small>{mostActive[1]} bøde{mostActive[1] === 1 ? '' : 'r'}</small>}
-          </div>
-        </div>
-
-        <div className="dashboard-recent card">
-          <div className="dashboard-recent-header">
-            <h2>🕘 Seneste bøder</h2>
-            <span>{recentFines.length} seneste</span>
-          </div>
-          {recentFines.length === 0 ? (
-            <p className="muted">Der er ikke oprettet bøder endnu.</p>
-          ) : (
-            <div className="recent-fine-list">
-              {recentFines.map(fine => (
-                <div className="recent-fine-row" key={fine.id}>
-                  <div>
-                    <strong>{fine.payer}</strong>
-                    <span>{fine.reason || 'Ingen årsag'} · {formatDate(fine.created_at)}</span>
-                  </div>
-                  <div className="recent-fine-amount">
-                    <strong>{formatCurrency(Number(fine.amount))}</strong>
-                    <span className={fine.paid ? 'status-paid' : 'status-unpaid'}>{fine.paid ? 'Betalt' : 'Skyldig'}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
 
       <div className="fines-grid">
         <section className="left">
@@ -816,7 +743,7 @@ export default function FinesPage() {
                       <button
                         type="button"
                         className="primary"
-                        onClick={() => openPayModal([...selectedFineIds])}
+                        onClick={() => markPaid([...selectedFineIds])}
                       >
                         Markér valgte som betalt
                       </button>
@@ -895,14 +822,14 @@ export default function FinesPage() {
                                   </div>
                                   <div className="fine-detail-meta">
                                     {f.paid
-                                      ? `Betalt${f.paid_by ? ` af ${f.paid_by}` : ''}${f.paid_at ? ` · ${formatDate(f.paid_at)}` : ''}`
+                                      ? `Betalt af ${f.payer}${f.paid_at ? ` · ${formatDate(f.paid_at)}` : ''}`
                                       : 'Ubetalt'}
                                   </div>
                                   {isFormand && (
                                     <div className="fine-detail-actions">
                                       {!f.paid && (
                                         <>
-                                          <button type="button" onClick={() => openPayModal([f.id], f.payer)}>Betalt</button>
+                                          <button type="button" onClick={() => markPaid([f.id])}>Betalt</button>
                                           {!f.wheel_used && (
                                             <button type="button" className="wheel-btn" onClick={() => setWheelFine(f)}>🎰</button>
                                           )}
@@ -931,39 +858,6 @@ export default function FinesPage() {
           </div>
         </section>
       </div>
-
-      {/* Pay Modal */}
-      {payModalFineIds.length > 0 && (
-        <div className="modal-overlay" onClick={() => setPayModalFineIds([])}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <h3>💰 Markér som betalt</h3>
-            <p className="modal-subtitle">
-              Hvem har betalt {payModalFineIds.length === 1 ? 'denne bøde' : `${payModalFineIds.length} bøder`}?
-            </p>
-            <select
-              value={payModalPayer}
-              onChange={e => setPayModalPayer(e.target.value)}
-              className="player-select"
-              autoFocus
-            >
-              <option value="">Vælg medlem...</option>
-              {members.map(m => (
-                <option key={m.user_id} value={m.name}>{m.name}</option>
-              ))}
-            </select>
-            <div className="modal-actions">
-              <button 
-                className="primary" 
-                onClick={() => markPaid(payModalFineIds, payModalPayer)}
-                disabled={!payModalPayer || loading}
-              >
-                {loading ? 'Gemmer...' : 'Bekræft betaling'}
-              </button>
-              <button onClick={() => setPayModalFineIds([])}>Annuller</button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Lucky Wheel */}
       <LuckyWheel

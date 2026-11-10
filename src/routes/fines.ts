@@ -333,7 +333,6 @@ router.get('/:id', authMiddleware, async (req: any, res) => {
 // Mark fine as paid (only formand)
 router.post('/:id/pay', authMiddleware, async (req: any, res) => {
   const { id } = req.params;
-  const { paid_by } = req.body;
   const userId = req.userId;
 
   try {
@@ -357,9 +356,8 @@ router.post('/:id/pay', authMiddleware, async (req: any, res) => {
 
     const result = await pool.request()
       .input('id', id)
-      .input('paid_by', paid_by || null)
       .query(`
-        UPDATE fines SET paid = 1, paid_by = @paid_by, paid_at = SYSDATETIMEOFFSET() 
+        UPDATE fines SET paid = 1, paid_by = payer, paid_at = SYSDATETIMEOFFSET()
         WHERE id = @id; 
         SELECT * FROM fines WHERE id = @id;
       `);
@@ -373,15 +371,15 @@ router.post('/:id/pay', authMiddleware, async (req: any, res) => {
 
 // Mark several fines as paid at once (only formand)
 router.post('/bulk-pay', authMiddleware, async (req: any, res) => {
-  const { fine_ids, paid_by } = req.body;
+  const { fine_ids } = req.body;
   const userId = req.userId;
 
   const ids = Array.isArray(fine_ids)
     ? [...new Set(fine_ids.map((id: unknown) => Number(id)).filter((id: number) => Number.isInteger(id) && id > 0))]
     : [];
 
-  if (ids.length === 0 || !paid_by) {
-    return res.status(400).json({ error: 'Vælg mindst én bøde og hvem der har betalt' });
+  if (ids.length === 0) {
+    return res.status(400).json({ error: 'Vælg mindst én bøde' });
   }
 
   try {
@@ -391,7 +389,7 @@ router.post('/bulk-pay', authMiddleware, async (req: any, res) => {
     ids.forEach((id, index) => selectRequest.input(`fine_id_${index}`, id));
 
     const fineResult = await selectRequest.query(
-      `SELECT id, team_id FROM fines WHERE id IN (${parameters.join(', ')})`
+      `SELECT id, team_id, payer FROM fines WHERE id IN (${parameters.join(', ')})`
     );
 
     if (fineResult.recordset.length !== ids.length) {
@@ -405,11 +403,11 @@ router.post('/bulk-pay', authMiddleware, async (req: any, res) => {
       }
     }
 
-    const updateRequest = pool.request().input('paid_by', paid_by);
+    const updateRequest = pool.request();
     ids.forEach((id, index) => updateRequest.input(`update_fine_id_${index}`, id));
     const updateResult = await updateRequest.query(`
       UPDATE fines
-      SET paid = 1, paid_by = @paid_by, paid_at = SYSDATETIMEOFFSET()
+      SET paid = 1, paid_by = payer, paid_at = SYSDATETIMEOFFSET()
       WHERE id IN (${ids.map((_, index) => `@update_fine_id_${index}`).join(', ')}) AND paid = 0
     `);
 

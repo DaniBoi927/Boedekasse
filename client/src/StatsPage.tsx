@@ -165,7 +165,7 @@ export default function StatsPage() {
               <small>{formatCurrency(totals.paid)} er betalt</small>
             </div>
             <div className="card stats-metric-card">
-              <span className="stats-metric-label">Mest aktive spiller</span>
+              <span className="stats-metric-label">Mest gavmilde</span>
               <strong>{mostFines?.name || 'Ingen endnu'}</strong>
               <small>{mostFines ? `${mostFines.count} bøder` : 'Ingen bøder endnu'}</small>
             </div>

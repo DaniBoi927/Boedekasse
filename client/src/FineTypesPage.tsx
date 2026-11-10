@@ -135,14 +135,26 @@ export default function FineTypesPage() {
   return (
     <div className="fine-types-page">
       <div className="page-header">
-        <h1>📋 Bødetyper</h1>
-        <p>Her kan du se alle bødetyper for <span className="team-name">{currentTeam.name}</span></p>
+        <div>
+          <h1>📋 Bødetyper</h1>
+          <p>Genveje til de bøder I bruger mest på <span className="team-name">{currentTeam.name}</span></p>
+        </div>
+        <div className="page-header-badge">
+          <strong>{fineTypes.length}</strong>
+          <span>{fineTypes.length === 1 ? 'bødetype' : 'bødetyper'}</span>
+        </div>
       </div>
 
       {error && <div className="error-banner">{error}</div>}
 
       <div className="card add-fine-type-card">
-        <h2>Opret ny bødetype</h2>
+        <div className="section-heading">
+          <div>
+            <span className="section-eyebrow">Hurtig opsætning</span>
+            <h2>Opret ny bødetype</h2>
+          </div>
+          <span className="section-icon">＋</span>
+        </div>
         <form onSubmit={addFineType} className="add-fine-type-form-large">
           <div className="form-group">
             <label>Årsag</label>
@@ -171,8 +183,14 @@ export default function FineTypesPage() {
         </form>
       </div>
 
-      <div className="card">
-        <h2>📜 Alle bødetyper</h2>
+      <div className="card fine-types-list-card">
+        <div className="section-heading">
+          <div>
+            <span className="section-eyebrow">Klar til brug i bøde-flowet</span>
+            <h2>📜 Alle bødetyper</h2>
+          </div>
+          <span className="section-icon">✓</span>
+        </div>
         {loading && fineTypes.length === 0 ? (
           <div className="muted">Indlæser...</div>
         ) : fineTypes.length === 0 ? (
