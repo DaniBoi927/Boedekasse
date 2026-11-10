@@ -5,9 +5,8 @@ import Sidebar from './Sidebar';
 import FinesPage from './FinesPage';
 import FineTypesPage from './FineTypesPage';
 import TeamPage from './TeamPage';
-import LeaguePage from './LeaguePage';
 
-type Page = 'fines' | 'fine-types' | 'team' | 'league';
+type Page = 'fines' | 'fine-types' | 'team';
 
 function AppContent() {
   const { user, loading, currentTeam } = useAuth();
@@ -61,12 +60,6 @@ function AppContent() {
             📜 Bødetyper
           </button>
           <button
-            className={page === 'league' ? 'active' : ''}
-            onClick={() => setPage('league')}
-          >
-            🏆 Liga
-          </button>
-          <button
             className={page === 'team' ? 'active' : ''}
             onClick={() => setPage('team')}
           >
@@ -79,7 +72,6 @@ function AppContent() {
         
         {page === 'fines' && <FinesPage />}
         {page === 'fine-types' && <FineTypesPage />}
-        {page === 'league' && <LeaguePage />}
         {page === 'team' && <TeamPage />}
         
         <footer className="footer">Bygget med ❤️ til padel 🎾</footer>
